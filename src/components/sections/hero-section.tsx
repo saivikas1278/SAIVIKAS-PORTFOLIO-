@@ -101,14 +101,14 @@ export default function HeroSection() {
               <div className="flex items-center gap-3.5 sm:gap-4">
                 {/* Minimalist Studio Avatar */}
                 <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden p-[2px] bg-gradient-to-tr from-[#F59E0B] via-[#F97316] to-[#EF4444] shadow-[0_0_20px_rgba(249,115,22,0.25)] shrink-0">
-                  <div className="relative w-full h-full rounded-full overflow-hidden bg-zinc-900 border border-black">
+                  <div className="relative w-full h-full rounded-full overflow-hidden bg-zinc-900 border border-black flex items-center justify-center">
                     <Image
                       src="/assets/images/my1.jpg"
                       alt="Sai Vikas"
-                      fill
+                      width={64}
+                      height={64}
                       priority
-                      sizes="64px"
-                      className="object-cover object-top filter contrast-[1.05] brightness-[1.02]"
+                      className="w-full h-full object-cover object-top filter contrast-[1.05] brightness-[1.02]"
                     />
                   </div>
                 </div>
