@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import HeroSection from "@/components/sections/hero-section";
 import ContactSection from "@/components/sections/contact-section";
 import SkillsSection from "@/components/sections/skills-section";
 import ProjectsSection from "@/components/sections/projects-section";
@@ -93,44 +94,7 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section id="home" className="relative h-screen w-full flex flex-col justify-center items-center px-4 sm:px-8 md:px-12 lg:px-16 overflow-hidden">
-        {/* Soft Background Accent Glows */}
-        <div className="absolute top-[20%] left-[20%] w-[350px] h-[350px] rounded-full bg-[#F59E0B]/5 filter blur-[60px] pointer-events-none" />
-        <div className="absolute bottom-[20%] right-[20%] w-[350px] h-[350px] rounded-full bg-[#EF4444]/5 filter blur-[60px] pointer-events-none" />
-
-        <div className="relative z-10 text-center max-w-3xl mx-auto flex flex-col items-center">
-          <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.25em] text-[#F97316] mb-6 bg-[#F97316]/10 border border-[#F97316]/20 shadow-[0_0_12px_rgba(249,115,22,0.15)] px-4 py-1.5 rounded-full">
-            ENGINEERING & INNOVATION
-          </span>
-
-          <h1 className="font-display font-black text-5xl sm:text-7xl md:text-8xl tracking-tight text-white mb-4 uppercase">
-            SAI VIKAS
-          </h1>
-
-          <h2 className="font-display font-bold text-xl sm:text-2xl md:text-3xl tracking-[0.15em] text-transparent bg-clip-text bg-gradient-to-r from-[#F59E0B] via-[#F97316] to-[#EF4444] uppercase mb-8">
-            Computer Science & IT Student / Developer
-          </h2>
-
-          <p className="font-sans text-sm sm:text-base text-zinc-400 max-w-lg leading-relaxed mb-10">
-            Currently pursuing my Bachelor&apos;s degree at SRKR Engineering College. Specializing in highly interactive frontends, real-time cricket auction apps, and scalable web architectures.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
-            <a
-              href="#projects"
-              className="px-8 py-3.5 rounded-xl text-xs font-bold tracking-widest text-white bg-gradient-to-r from-[#F59E0B] via-[#F97316] to-[#EF4444] hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:scale-105 active:scale-95 transition-all duration-300"
-            >
-              VIEW PROJECTS
-            </a>
-            <a
-              href="#contact"
-              className="px-8 py-3.5 rounded-xl text-xs font-bold tracking-widest text-zinc-300 border border-white/10 hover:border-[#F59E0B]/40 hover:bg-white/5 transition-all duration-300"
-            >
-              GET IN TOUCH
-            </a>
-          </div>
-        </div>
-      </section>
+      <HeroSection />
 
       {/* About Me Section */}
       <section id="about" className="relative py-24 sm:py-32 px-4 sm:px-8 md:px-12 lg:px-16 bg-zinc-950/20 border-t border-white/5">
