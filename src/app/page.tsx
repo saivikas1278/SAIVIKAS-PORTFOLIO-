@@ -5,48 +5,34 @@ import ContactSection from "@/components/sections/contact-section";
 import SkillsSection from "@/components/sections/skills-section";
 import ProjectsSection from "@/components/sections/projects-section";
 import CertificationsSection from "@/components/sections/certifications-section";
-import SignatureCard from "@/components/sections/signature-card";
-import profileData from "@/data/profile.json";
+import Footer from "@/components/footer";
 
 export default function Home() {
   return (
     <div className="relative min-h-screen">
-      {/* Redesigned Fixed Navbar */}
+      {/* Fixed Navbar with Scroll Spy & Morphing Mobile Menu */}
       <Navbar />
 
-      {/* Hero Section */}
+      {/* Hero Section with 3D Tilt Flagship Card */}
       <HeroSection />
 
-      {/* Redesigned Bento About Section */}
+      {/* Bento About Section */}
       <AboutSection />
 
-      {/* Projects Section */}
+      {/* Projects Section with Live Simulated Auction Mockup */}
       <ProjectsSection />
 
-      {/* Skills Section */}
+      {/* Skills Section with 60fps Marquee & Bento Cards */}
       <SkillsSection />
 
-      {/* Certifications Section */}
+      {/* Certifications Section with Lightbox & Spotlight */}
       <CertificationsSection />
 
-      {/* Contact Section */}
-      <ContactSection
-        emailjsConfig={profileData.contact.emailjs}
-        email={profileData.contact.email}
-        phone={profileData.contact.phones[0]}
-        githubUrl="https://github.com/saivikas1278"
-        linkedinUrl="https://linkedin.com/in/sai-vikas"
-      />
+      {/* Contact Section with Floating-Label Form & Direct Cards */}
+      <ContactSection />
 
-      {/* Interactive Signature Card */}
-      <SignatureCard />
-
-      {/* Footer */}
-      <footer className="py-8 text-center border-t border-white/5 bg-black text-zinc-600 font-sans text-xs">
-        <div className="max-w-7xl mx-auto px-6">
-          <p>© {new Date().getFullYear()} SAI VIKAS. All rights reserved.</p>
-        </div>
-      </footer>
+      {/* Big CTA Band & 3-Column Footer */}
+      <Footer />
     </div>
   );
 }

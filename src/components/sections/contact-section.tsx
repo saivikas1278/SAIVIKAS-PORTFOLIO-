@@ -1,198 +1,609 @@
 "use client";
 
-import React from "react";
-import { Mail, Phone, Sparkles } from "lucide-react";
-import { motion } from "framer-motion";
-import ContactForm from "./contact-form";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import {
+  Mail,
+  Phone,
+  MapPin,
+  ArrowUpRight,
+  Copy,
+  Check,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  Sparkles,
+} from "lucide-react";
+import { FaGithub, FaLinkedin, FaXTwitter } from "react-icons/fa6";
+import { playUISound } from "@/utils/sound-manager";
 
-interface ContactSectionProps {
-  emailjsConfig: {
-    publicKey: string;
-    serviceId: string;
-    templateId: string;
-  };
+interface FormState {
+  name: string;
   email: string;
-  phone: string;
-  githubUrl: string;
-  linkedinUrl: string;
+  subject: string;
+  message: string;
+  website: string; // Honeypot
 }
 
-export default function ContactSection({
-  emailjsConfig,
-  email,
-  phone,
-  githubUrl,
-  linkedinUrl,
-}: ContactSectionProps) {
-  // Animation Variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.15,
-      },
-    },
+interface FormErrors {
+  name?: string;
+  email?: string;
+  subject?: string;
+  message?: string;
+}
+
+export default function ContactSection() {
+  // Contact info
+  const email = "cheepusaivikas549@gmail.com";
+  const phone = "+91 7989001874";
+  const location = "Bhimavaram & Hyderabad, India · IST (UTC+5:30)";
+
+  // Copy email feedback
+  const [copied, setCopied] = useState(false);
+
+  // Form State
+  const [formData, setFormData] = useState<FormState>({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+    website: "",
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
+  const [serverMessage, setServerMessage] = useState("");
+
+  // Track focused fields for floating label styles
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+
+  // Handle Copy Email
+  const handleCopyEmail = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(email);
+    setCopied(true);
+    try { playUISound("click"); } catch {}
+    setTimeout(() => setCopied(false), 2500);
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        type: "spring" as const,
-        stiffness: 100,
-        damping: 15,
-      },
-    },
+  // Field validation
+  const validate = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    if (!formData.name.trim() || formData.name.trim().length < 2) {
+      newErrors.name = "Name must be at least 2 characters.";
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email.trim() || !emailRegex.test(formData.email.trim())) {
+      newErrors.email = "Please enter a valid email address.";
+    }
+
+    if (!formData.subject.trim() || formData.subject.trim().length < 3) {
+      newErrors.subject = "Subject must be at least 3 characters.";
+    }
+
+    if (!formData.message.trim() || formData.message.trim().length < 10) {
+      newErrors.message = "Message must be at least 10 characters.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Submit Handler
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validate()) {
+      try { playUISound("click"); } catch {}
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitStatus("idle");
+    setServerMessage("");
+    try { playUISound("click"); } catch {}
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to submit message.");
+      }
+
+      setSubmitStatus("success");
+      setServerMessage(data.message || "Message sent successfully!");
+      setFormData({
+        name: "",
+        email: "",
+        subject: "",
+        message: "",
+        website: "",
+      });
+      setErrors({});
+    } catch (err: unknown) {
+      setSubmitStatus("error");
+      const errObj = err as Error;
+      setServerMessage(errObj.message || "Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <section
       id="contact"
-      className="relative py-24 sm:py-32 px-4 sm:px-8 md:px-12 lg:px-16 overflow-hidden bg-black"
+      aria-label="Contact & Inquiries"
+      className="relative py-20 lg:py-[120px] w-full bg-[var(--bg)] overflow-hidden"
     >
-      {/* Ambient background glows */}
-      <div className="absolute top-[30%] -left-[10%] w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] rounded-full bg-[#F59E0B]/5 filter blur-[80px] pointer-events-none z-0" />
-      <div className="absolute bottom-[20%] -right-[10%] w-[350px] sm:w-[500px] h-[350px] sm:h-[500px] rounded-full bg-[#EF4444]/5 filter blur-[80px] pointer-events-none z-0" />
+      {/* Background Soft Spots */}
+      <div className="absolute top-[20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[#FF7A1A]/5 filter blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-[10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[#FF3D54]/5 filter blur-[100px] pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto relative z-10">
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start"
+      <div className="max-w-[1200px] mx-auto px-6 lg:px-12 relative z-10">
+        {/* =================================================================== */}
+        {/* SECTION HEADER                                                      */}
+        {/* =================================================================== */}
+        <motion.header
+          initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
+          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-12 lg:mb-16 flex flex-col items-start text-left"
         >
-          {/* Left Column: Heading, Subtitle, Contact details & Socials */}
-          <div className="lg:col-span-5 space-y-8 flex flex-col items-center lg:items-start text-center lg:text-left">
-            <motion.div variants={itemVariants} className="space-y-4 w-full">
-              <span className="text-xs font-black text-[#F97316] tracking-[0.25em] uppercase block">
-                04 / ENGAGE
-              </span>
-              <h2 className="font-display font-black text-4xl sm:text-5xl md:text-6xl text-white tracking-tight uppercase">
-                Let&apos;s Connect
-              </h2>
-              {/* Eye-catching gradient accent line */}
-              <div className="h-[3px] w-24 sm:w-32 bg-gradient-to-r from-[#F59E0B] via-[#F97316] to-[#EF4444] rounded-full mx-auto lg:mx-0 shadow-[0_0_10px_rgba(249,115,22,0.5)]" />
-            </motion.div>
-
-            <motion.p
-              variants={itemVariants}
-              className="font-sans text-sm sm:text-base leading-relaxed text-zinc-400 max-w-md"
-            >
-              I&apos;m always open to discussing new freelance roles, sports app ideas,
-              full-stack database integrations, or technical collaborations. Let&apos;s
-              create something functional!
-            </motion.p>
-
-            {/* Direct Info List - Clean, Modern Cards with subtle glow */}
-            <motion.div variants={itemVariants} className="space-y-4 w-full max-w-md">
-              {/* Email Card */}
-              <a
-                href={`mailto:${email}`}
-                className="group flex items-center gap-4 p-4 rounded-2xl border border-white/5 bg-zinc-950/40 backdrop-blur-md transition-all duration-300 hover:border-[#F97316]/30 hover:bg-zinc-900/40 hover:shadow-[0_0_20px_rgba(249,115,22,0.1)] block"
-              >
-                <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-white/5 flex items-center justify-center text-[#F97316] group-hover:scale-110 group-hover:border-[#F97316]/45 group-hover:shadow-[0_0_15px_rgba(249,115,22,0.2)] transition-all duration-300 flex-shrink-0">
-                  <Mail size={20} />
-                </div>
-                <div className="text-left">
-                  <span className="text-[10px] font-black tracking-widest text-zinc-500 uppercase block">
-                    Email Me
-                  </span>
-                  <span className="text-sm sm:text-base font-bold text-zinc-300 group-hover:text-white transition-colors break-all">
-                    {email}
-                  </span>
-                </div>
-              </a>
-
-              {/* Phone Card */}
-              <a
-                href={`tel:${phone.replace(/\s+/g, "")}`}
-                className="group flex items-center gap-4 p-4 rounded-2xl border border-white/5 bg-zinc-950/40 backdrop-blur-md transition-all duration-300 hover:border-[#F59E0B]/30 hover:bg-zinc-900/40 hover:shadow-[0_0_20px_rgba(245,158,11,0.1)] block"
-              >
-                <div className="w-12 h-12 rounded-xl bg-zinc-900 border border-white/5 flex items-center justify-center text-[#F59E0B] group-hover:scale-110 group-hover:border-[#F59E0B]/45 group-hover:shadow-[0_0_15px_rgba(245,158,11,0.2)] transition-all duration-300 flex-shrink-0">
-                  <Phone size={20} />
-                </div>
-                <div className="text-left">
-                  <span className="text-[10px] font-black tracking-widest text-zinc-500 uppercase block">
-                    Call Me
-                  </span>
-                  <span className="text-sm sm:text-base font-bold text-zinc-300 group-hover:text-white transition-colors">
-                    {phone}
-                  </span>
-                </div>
-              </a>
-            </motion.div>
-
-            {/* Social Icons with Smooth Hover Animations */}
-            <motion.div
-              variants={itemVariants}
-              className="flex items-center justify-center lg:justify-start gap-4 pt-4 w-full"
-            >
-              <a
-                href={githubUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="GitHub Profile"
-                className="w-12 h-12 rounded-xl bg-zinc-950 border border-white/5 flex items-center justify-center text-zinc-400 hover:text-white hover:border-[#F59E0B]/40 hover:shadow-[0_0_15px_rgba(245,158,11,0.25)] hover:bg-zinc-900/50 transition-all duration-300 hover:-translate-y-1"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-github">
-                  <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
-                  <path d="M9 18c-4.51 2-5-2-7-2" />
-                </svg>
-              </a>
-              <a
-                href={linkedinUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="LinkedIn Profile"
-                className="w-12 h-12 rounded-xl bg-zinc-950 border border-white/5 flex items-center justify-center text-zinc-400 hover:text-white hover:border-[#EF4444]/40 hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] hover:bg-zinc-900/50 transition-all duration-300 hover:-translate-y-1"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-linkedin">
-                  <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
-                  <rect width="4" height="12" x="2" y="9" rx="1" />
-                  <circle cx="4" cy="4" r="2" />
-                </svg>
-              </a>
-            </motion.div>
+          {/* Eyebrow */}
+          <div className="inline-flex items-center gap-2 mb-3 select-none">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+            <span className="font-mono text-xs font-medium uppercase tracking-[0.12em] text-[var(--accent)]">
+              ● 06 / CONTACT
+            </span>
           </div>
 
-          {/* Right Column: High-Converting Form Card with Custom Glow */}
+          {/* Large Header */}
+          <h2 className="font-display font-semibold text-[clamp(2.25rem,4.5vw,3.75rem)] tracking-[-0.03em] leading-[1.05] text-[var(--text)] max-w-2xl">
+            Let&apos;s build something{" "}
+            <span className="bg-gradient-to-r from-[#FFB020] via-[#FF7A1A] to-[#FF3D54] bg-clip-text text-transparent">
+              remarkable
+            </span>{" "}
+            together.
+          </h2>
+
+          <p className="font-sans text-base sm:text-lg text-[var(--text-muted)] leading-[1.7] max-w-xl mt-4">
+            Whether you&apos;re looking for high-performance frontend architecture, real-time WebSocket systems, or an ambitious full-stack engineer to scale your team, my inbox is open.
+          </p>
+        </motion.header>
+
+        {/* =================================================================== */}
+        {/* 2-COLUMN CONTACT GRID                                               */}
+        {/* =================================================================== */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
+          {/* ================================================================= */}
+          {/* LEFT COLUMN: 3 Contact Cards + Socials + Reply Line               */}
+          {/* ================================================================= */}
           <motion.div
-            variants={itemVariants}
-            className="lg:col-span-7 w-full"
+            initial={{ opacity: 0, x: -24, filter: "blur(6px)" }}
+            whileInView={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            className="lg:col-span-5 space-y-4"
           >
-            <div className="relative rounded-3xl p-6 sm:p-8 border border-white/5 bg-zinc-950/40 backdrop-blur-md overflow-hidden shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] group/card">
-              {/* Internal Accent Glow */}
-              <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#F59E0B]/10 rounded-full filter blur-2xl group-hover/card:bg-[#F59E0B]/15 transition-all duration-500 pointer-events-none" />
-              <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-[#EF4444]/5 rounded-full filter blur-2xl group-hover/card:bg-[#EF4444]/8 transition-all duration-500 pointer-events-none" />
+            {/* 1. Email Card */}
+            <div className="group relative rounded-[20px] bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)] p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(255,122,26,0.12)]">
+              <div className="flex items-center justify-between gap-4">
+                <a
+                  href={`mailto:${email}`}
+                  className="flex items-center gap-4 min-w-0 flex-1"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-[#FF7A1A]/10 border border-[#FF7A1A]/20 flex items-center justify-center text-[#FF7A1A] group-hover:scale-105 transition-transform duration-300 shrink-0">
+                    <Mail size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="font-mono text-[10px] uppercase font-bold text-[var(--text-dim)] tracking-wider block">
+                      EMAIL DIRECT
+                    </span>
+                    <span className="font-mono text-sm text-[var(--text)] group-hover:text-white transition-colors truncate block">
+                      {email}
+                    </span>
+                  </div>
+                </a>
 
-              <div className="relative z-10 space-y-6">
-                <div className="flex items-center gap-2 text-zinc-400">
-                  <Sparkles size={16} className="text-[#F97316] animate-pulse" />
-                  <span className="text-xs font-black uppercase tracking-widest text-zinc-400">
-                    Looking for a custom project?
-                  </span>
-                </div>
-                
-                <h3 className="font-display font-bold text-2xl sm:text-3xl text-white tracking-wide leading-tight">
-                  Send a message and let&apos;s turn your ideas into a functional reality.
-                </h3>
-                
-                <p className="font-sans text-xs sm:text-sm text-zinc-400 leading-relaxed">
-                  Whether you need a sleek sports web portal, robust API integrations, or modern single-page applications, leave your contact details below.
-                </p>
+                {/* Copy to Clipboard Button with Feedback */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleCopyEmail}
+                    title="Copy email to clipboard"
+                    className="relative px-2.5 py-1.5 rounded-lg bg-[var(--surface-2)] hover:bg-white/10 border border-[var(--border)] text-xs text-[var(--text-muted)] hover:text-white transition-all flex items-center gap-1.5 select-none"
+                  >
+                    {copied ? (
+                      <>
+                        <Check size={13} className="text-emerald-400" />
+                        <span className="font-mono text-[11px] text-emerald-400 font-semibold">
+                          Copied!
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={13} />
+                        <span className="font-mono text-[11px]">Copy</span>
+                      </>
+                    )}
+                  </button>
 
-                {/* EmailJS integrated contact form */}
-                <div className="pt-4 border-t border-white/5">
-                  <ContactForm emailjsConfig={emailjsConfig} />
+                  <a
+                    href={`mailto:${email}`}
+                    className="text-[var(--text-dim)] group-hover:text-[var(--accent)] transition-colors"
+                  >
+                    <ArrowUpRight
+                      size={18}
+                      className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-200"
+                    />
+                  </a>
                 </div>
               </div>
             </div>
+
+            {/* 2. Phone / WhatsApp Card */}
+            <a
+              href={`https://wa.me/917989001874`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group relative rounded-[20px] bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)] p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(255,122,26,0.12)] flex items-center justify-between gap-4 block"
+            >
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-[#22C55E]/10 border border-[#22C55E]/20 flex items-center justify-center text-[#22C55E] group-hover:scale-105 transition-transform duration-300 shrink-0">
+                  <Phone size={18} />
+                </div>
+                <div className="min-w-0">
+                  <span className="font-mono text-[10px] uppercase font-bold text-[var(--text-dim)] tracking-wider block">
+                    PHONE / WHATSAPP
+                  </span>
+                  <span className="font-mono text-sm text-[var(--text)] group-hover:text-white transition-colors">
+                    {phone}
+                  </span>
+                </div>
+              </div>
+
+              <div className="text-[var(--text-dim)] group-hover:text-[var(--accent)] transition-colors shrink-0">
+                <ArrowUpRight
+                  size={18}
+                  className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-200"
+                />
+              </div>
+            </a>
+
+            {/* 3. Location Card */}
+            <div className="group relative rounded-[20px] bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)] p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_25px_rgba(255,122,26,0.12)] flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-[#38BDF8]/10 border border-[#38BDF8]/20 flex items-center justify-center text-[#38BDF8] group-hover:scale-105 transition-transform duration-300 shrink-0">
+                  <MapPin size={18} />
+                </div>
+                <div className="min-w-0">
+                  <span className="font-mono text-[10px] uppercase font-bold text-[var(--text-dim)] tracking-wider block">
+                    LOCATION / TIMEZONE
+                  </span>
+                  <span className="font-sans text-xs sm:text-sm text-[var(--text)] group-hover:text-white transition-colors line-clamp-1">
+                    {location}
+                  </span>
+                </div>
+              </div>
+
+              <div className="text-[var(--text-dim)] group-hover:text-[var(--accent)] transition-colors shrink-0">
+                <ArrowUpRight
+                  size={18}
+                  className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-200"
+                />
+              </div>
+            </div>
+
+            {/* Social Icon Buttons */}
+            <div className="pt-2 flex items-center gap-3">
+              <a
+                href="https://github.com/saivikas1278"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="GitHub Profile"
+                className="w-11 h-11 rounded-xl bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)] hover:bg-[#FF7A1A]/10 text-zinc-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(255,122,26,0.2)]"
+              >
+                <FaGithub size={18} />
+              </a>
+
+              <a
+                href="https://linkedin.com/in/sai-vikas"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LinkedIn Profile"
+                className="w-11 h-11 rounded-xl bg-[var(--surface)] border border-[var(--border)] hover:border-[#0A66C2] hover:bg-[#0A66C2]/10 text-zinc-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(10,102,194,0.2)]"
+              >
+                <FaLinkedin size={18} />
+              </a>
+
+              <a
+                href="https://x.com/saivikas1278"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="X (Twitter) Profile"
+                className="w-11 h-11 rounded-xl bg-[var(--surface)] border border-[var(--border)] hover:border-white/30 hover:bg-white/10 text-zinc-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-1"
+              >
+                <FaXTwitter size={16} />
+              </a>
+            </div>
+
+            {/* Availability / Reply Notice */}
+            <div className="pt-3 flex items-center gap-2 font-mono text-xs text-[var(--text-muted)] select-none">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#22C55E]" />
+              </span>
+              <span>Typically replies within 24 hours</span>
+            </div>
           </motion.div>
-        </motion.div>
+
+          {/* ================================================================= */}
+          {/* RIGHT COLUMN: Glass Form Card with Floating Labels & Honeypot     */}
+          {/* ================================================================= */}
+          <motion.div
+            initial={{ opacity: 0, x: 24, filter: "blur(6px)" }}
+            whileInView={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            className="lg:col-span-7"
+          >
+            <div className="relative rounded-[24px] bg-[var(--surface)] border border-[var(--border)] p-6 sm:p-8 md:p-10 shadow-2xl backdrop-blur-xl overflow-hidden">
+              {/* Corner ambient glow */}
+              <div
+                aria-hidden="true"
+                className="absolute top-0 right-0 w-48 h-48 bg-[#FF7A1A]/10 rounded-full filter blur-3xl pointer-events-none"
+              />
+
+              <div className="relative z-10 mb-6 flex items-center justify-between">
+                <div>
+                  <h3 className="font-display font-bold text-xl text-white tracking-tight">
+                    Send a direct message
+                  </h3>
+                  <p className="font-sans text-xs text-[var(--text-muted)] mt-1">
+                    Fill in your details below and I will get back to you promptly.
+                  </p>
+                </div>
+                <Sparkles size={18} className="text-[var(--accent)] animate-pulse" />
+              </div>
+
+              {/* Status Banner */}
+              <AnimatePresence>
+                {submitStatus === "success" && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="mb-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-start gap-3 text-xs font-mono"
+                  >
+                    <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
+                    <div>
+                      <p className="font-bold">Message sent successfully!</p>
+                      <p className="opacity-90">{serverMessage}</p>
+                    </div>
+                  </motion.div>
+                )}
+
+                {submitStatus === "error" && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-start gap-3 text-xs font-mono"
+                  >
+                    <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                    <div>
+                      <p className="font-bold">Delivery failed</p>
+                      <p className="opacity-90">{serverMessage}</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <form onSubmit={handleSubmit} noValidate className="space-y-4">
+                {/* 1. Honeypot Input (Invisible to humans, caught on bots) */}
+                <input
+                  type="text"
+                  name="website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={formData.website}
+                  onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                  className="opacity-0 pointer-events-none absolute -top-9999px -left-9999px h-0 w-0"
+                  aria-hidden="true"
+                />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Name Floating-Label Input */}
+                  <div>
+                    <div className="relative">
+                      <input
+                        id="contact-name"
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) => {
+                          setFormData({ ...formData, name: e.target.value });
+                          if (errors.name) setErrors({ ...errors, name: undefined });
+                        }}
+                        onFocus={() => setFocusedField("name")}
+                        onBlur={() => setFocusedField(null)}
+                        className={`w-full pt-6 pb-2.5 px-4 rounded-xl bg-[var(--surface-2)] border text-sm text-white placeholder-transparent focus:outline-none transition-all duration-200 ${
+                          errors.name
+                            ? "border-red-500/70 focus:border-red-400 focus:ring-4 focus:ring-red-500/15"
+                            : "border-[var(--border)] focus:border-[#FF7A1A] focus:ring-4 focus:ring-[#FF7A1A]/15"
+                        }`}
+                        placeholder="Your Name"
+                      />
+                      <label
+                        htmlFor="contact-name"
+                        className={`absolute left-4 pointer-events-none transition-all duration-200 select-none ${
+                          focusedField === "name" || formData.name.length > 0
+                            ? "top-1.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-[var(--accent)]"
+                            : "top-4 text-xs text-[var(--text-dim)]"
+                        }`}
+                      >
+                        Your Name
+                      </label>
+                    </div>
+                    {errors.name && (
+                      <p className="font-mono text-[11px] text-red-400 mt-1 pl-1 flex items-center gap-1">
+                        ● {errors.name}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Email Floating-Label Input */}
+                  <div>
+                    <div className="relative">
+                      <input
+                        id="contact-email"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => {
+                          setFormData({ ...formData, email: e.target.value });
+                          if (errors.email) setErrors({ ...errors, email: undefined });
+                        }}
+                        onFocus={() => setFocusedField("email")}
+                        onBlur={() => setFocusedField(null)}
+                        className={`w-full pt-6 pb-2.5 px-4 rounded-xl bg-[var(--surface-2)] border text-sm text-white placeholder-transparent focus:outline-none transition-all duration-200 ${
+                          errors.email
+                            ? "border-red-500/70 focus:border-red-400 focus:ring-4 focus:ring-red-500/15"
+                            : "border-[var(--border)] focus:border-[#FF7A1A] focus:ring-4 focus:ring-[#FF7A1A]/15"
+                        }`}
+                        placeholder="Your Email"
+                      />
+                      <label
+                        htmlFor="contact-email"
+                        className={`absolute left-4 pointer-events-none transition-all duration-200 select-none ${
+                          focusedField === "email" || formData.email.length > 0
+                            ? "top-1.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-[var(--accent)]"
+                            : "top-4 text-xs text-[var(--text-dim)]"
+                        }`}
+                      >
+                        Your Email
+                      </label>
+                    </div>
+                    {errors.email && (
+                      <p className="font-mono text-[11px] text-red-400 mt-1 pl-1 flex items-center gap-1">
+                        ● {errors.email}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Subject Floating-Label Input */}
+                <div>
+                  <div className="relative">
+                    <input
+                      id="contact-subject"
+                      type="text"
+                      value={formData.subject}
+                      onChange={(e) => {
+                        setFormData({ ...formData, subject: e.target.value });
+                        if (errors.subject) setErrors({ ...errors, subject: undefined });
+                      }}
+                      onFocus={() => setFocusedField("subject")}
+                      onBlur={() => setFocusedField(null)}
+                      className={`w-full pt-6 pb-2.5 px-4 rounded-xl bg-[var(--surface-2)] border text-sm text-white placeholder-transparent focus:outline-none transition-all duration-200 ${
+                        errors.subject
+                          ? "border-red-500/70 focus:border-red-400 focus:ring-4 focus:ring-red-500/15"
+                          : "border-[var(--border)] focus:border-[#FF7A1A] focus:ring-4 focus:ring-[#FF7A1A]/15"
+                      }`}
+                      placeholder="Subject"
+                    />
+                    <label
+                      htmlFor="contact-subject"
+                      className={`absolute left-4 pointer-events-none transition-all duration-200 select-none ${
+                        focusedField === "subject" || formData.subject.length > 0
+                          ? "top-1.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-[var(--accent)]"
+                          : "top-4 text-xs text-[var(--text-dim)]"
+                      }`}
+                    >
+                      Subject / Project Scope
+                    </label>
+                  </div>
+                  {errors.subject && (
+                    <p className="font-mono text-[11px] text-red-400 mt-1 pl-1 flex items-center gap-1">
+                      ● {errors.subject}
+                    </p>
+                  )}
+                </div>
+
+                {/* Message Floating-Label Textarea */}
+                <div>
+                  <div className="relative">
+                    <textarea
+                      id="contact-message"
+                      rows={5}
+                      value={formData.message}
+                      onChange={(e) => {
+                        setFormData({ ...formData, message: e.target.value });
+                        if (errors.message) setErrors({ ...errors, message: undefined });
+                      }}
+                      onFocus={() => setFocusedField("message")}
+                      onBlur={() => setFocusedField(null)}
+                      className={`w-full pt-7 pb-3 px-4 rounded-xl bg-[var(--surface-2)] border text-sm text-white placeholder-transparent focus:outline-none transition-all duration-200 resize-none ${
+                        errors.message
+                          ? "border-red-500/70 focus:border-red-400 focus:ring-4 focus:ring-red-500/15"
+                          : "border-[var(--border)] focus:border-[#FF7A1A] focus:ring-4 focus:ring-[#FF7A1A]/15"
+                      }`}
+                      placeholder="Message"
+                    />
+                    <label
+                      htmlFor="contact-message"
+                      className={`absolute left-4 pointer-events-none transition-all duration-200 select-none ${
+                        focusedField === "message" || formData.message.length > 0
+                          ? "top-1.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-[var(--accent)]"
+                          : "top-4 text-xs text-[var(--text-dim)]"
+                      }`}
+                    >
+                      Tell me about your project or opportunity...
+                    </label>
+                  </div>
+                  {errors.message && (
+                    <p className="font-mono text-[11px] text-red-400 mt-1 pl-1 flex items-center gap-1">
+                      ● {errors.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Large Morphing Primary Gradient Button */}
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full h-12 px-8 rounded-full bg-gradient-to-r from-[#FFB020] via-[#FF7A1A] to-[#FF3D54] hover:shadow-[0_0_30px_rgba(255,122,26,0.35)] text-[#07070A] font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        <span>Sending Transmission...</span>
+                      </>
+                    ) : submitStatus === "success" ? (
+                      <>
+                        <CheckCircle2 size={16} className="text-[#07070A]" />
+                        <span>Message Sent</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Send Message</span>
+                        <ArrowUpRight size={15} />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </div>
       </div>
     </section>
   );
