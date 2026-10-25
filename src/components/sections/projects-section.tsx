@@ -1,11 +1,21 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { ExternalLink } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import {
+  ArrowUpRight,
+  ChevronDown,
+  ChevronUp,
+  ExternalLink,
+  Layers,
+  Sparkles,
+  Radio,
+  Check,
+} from "lucide-react";
 import { playUISound } from "@/utils/sound-manager";
 
 // Github SVG Icon
-const GithubIcon = ({ size = 14 }: { size?: number }) => (
+const GithubIcon = ({ size = 15 }: { size?: number }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width={size}
@@ -13,518 +23,686 @@ const GithubIcon = ({ size = 14 }: { size?: number }) => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2.5"
+    strokeWidth="2.2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    className="opacity-80"
   >
     <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
     <path d="M9 18c-4.51 2-5-2-7-2" />
   </svg>
 );
 
+type FilterCategory = "All" | "Full-Stack" | "Real-time" | "Frontend";
+
 interface ProjectItem {
   id: string;
+  index: string;
   title: string;
   subtitle: string;
+  category: ("Full-Stack" | "Real-time" | "Frontend")[];
   description: string;
   tags: string[];
   github: string;
   demo: string;
-  url: string;
-  asymmetricSpan: string;
-  mockup: React.ReactNode;
+  featured?: boolean;
+  problem: string;
+  solution: string;
+  impact: string;
+  initials: string;
+  gradient: string;
 }
 
-// ---------------------------------------------------------------------------
-// Multi-Layered 3D Parallax Tilt Card Component
-// ---------------------------------------------------------------------------
-function ParallaxTiltCard({ project }: { project: ProjectItem }) {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [transformStyle, setTransformStyle] = useState("");
-  const [glarePos, setGlarePos] = useState({ x: 50, y: 50, opacity: 0 });
-  const [canHover, setCanHover] = useState(false);
+const PROJECTS_DATA: ProjectItem[] = [
+  {
+    id: "cricket-auction",
+    index: "01",
+    title: "Cricket Auction Engine",
+    subtitle: "Real-Time WebSocket Protocol",
+    category: ["Real-time", "Full-Stack"],
+    featured: true,
+    description:
+      "Interactive real-time bidding suite for cricket tournaments. Synchronizes multi-client bid state, squad budgets, countdown timers, and player highlights with zero broadcast delay.",
+    tags: ["Next.js 15", "WebSockets", "Socket.io", "Node.js", "MongoDB"],
+    github: "https://github.com/saivikas1278/cricket-auction-app",
+    demo: "#",
+    problem:
+      "Traditional manual sports auctions suffered from desynced bid pricing, conflicting bids across concurrent room clients, and manual purse balance errors.",
+    solution:
+      "Architected an event-driven WebSocket room server with transactional state queues, sub-45ms latency pings, and automated team purse deductions.",
+    impact:
+      "Scaled to 8 concurrent team auctioneers with 0 dropped bids and sub-45ms synchronized state broadcast across all clients.",
+    initials: "CA",
+    gradient: "from-[#FFB020] via-[#FF7A1A] to-[#FF3D54]",
+  },
+  {
+    id: "cricket-fund-tracker",
+    index: "02",
+    title: "Cricket Team Fund Tracker",
+    subtitle: "Fintech & Ledger Architecture",
+    category: ["Full-Stack", "Frontend"],
+    description:
+      "Full-stack team treasury ledger designed to reconcile team funds, tournament entry fees, match expenditures, and automated micro-contributions.",
+    tags: ["Next.js 15", "Tailwind CSS", "Node.js", "MongoDB"],
+    github: "https://github.com/saivikas1278/cricket-fund-tracker",
+    demo: "#",
+    problem:
+      "Managing tournament entry fees, gear purchases, and varying micro-contributions across 15 squad members led to accounting disputes and manual calculation errors.",
+    solution:
+      "Built a real-time treasury ledger with automated contribution tracking, transparent transaction logs, and dynamic surplus/deficit calculations.",
+    impact:
+      "Successfully audited and managed over ₹48,000+ in team expenditures with zero accounting discrepancies.",
+    initials: "FT",
+    gradient: "from-amber-500 via-orange-600 to-red-600",
+  },
+  {
+    id: "ecommerce-core",
+    index: "03",
+    title: "E-Commerce Payment Core",
+    subtitle: "Secure Cart & Checkout API",
+    category: ["Full-Stack"],
+    description:
+      "Robust retail web application featuring parameterized catalog searches, persistent cart sessions, cryptographic transaction signing, and Stripe API checkout webhooks.",
+    tags: ["React", "Node.js", "Express", "MongoDB", "Stripe API"],
+    github: "https://github.com/saivikas1278/ecommerce-website",
+    demo: "#",
+    problem:
+      "Cart abandonment and inventory race conditions during high-concurrency checkout bursts in traditional web stores.",
+    solution:
+      "Designed transactional cart sessions with MongoDB atomic inventory reservation and cryptographic Stripe webhook signature verification.",
+    impact:
+      "Secured 256-bit SSL transaction completion with instant inventory deductions and automated checkout fulfillment.",
+    initials: "EC",
+    gradient: "from-blue-600 via-indigo-600 to-violet-600",
+  },
+  {
+    id: "weather-metric",
+    index: "04",
+    title: "Geographical Weather Metric",
+    subtitle: "OpenWeather REST Pipeline",
+    category: ["Frontend", "Real-time"],
+    description:
+      "Atmospheric intelligence client providing real-time barometric pressure readings, wind vector angles, localized humidity indices, and predictive 5-day meteorological forecasts.",
+    tags: ["React", "JavaScript", "Tailwind CSS", "REST API"],
+    github: "https://github.com/saivikas1278/weather-dashboard",
+    demo: "#",
+    problem:
+      "Raw meteorological APIs return dense JSON payloads that caused slow rendering and clunky mobile experience.",
+    solution:
+      "Built responsive SVG atmospheric gauges, localized coordinate caching, and optimized 5-day predictive weather cards.",
+    impact:
+      "Achieved sub-100ms render speeds for live geolocated climate readings with responsive visual indicators.",
+    initials: "WM",
+    gradient: "from-cyan-500 via-sky-600 to-blue-600",
+  },
+  {
+    id: "task-management",
+    index: "05",
+    title: "Task Management Dashboard",
+    subtitle: "Kanban Productivity Platform",
+    category: ["Frontend", "Full-Stack"],
+    description:
+      "Intuitive sprint organizer featuring customizable Kanban boards, priority tagging, drag-and-drop workflow status, and real-time cloud data persistence.",
+    tags: ["React", "Tailwind CSS", "JavaScript", "Firebase"],
+    github: "https://github.com/saivikas1278/task-management",
+    demo: "#",
+    problem:
+      "Overly complex enterprise project tools made daily sprint tracking burdensome and slow for engineering students.",
+    solution:
+      "Constructed a streamlined Kanban board with Firestore real-time listeners and offline local state caching.",
+    impact:
+      "Delivered instantaneous multi-device task synchronization with zero offline state conflicts.",
+    initials: "TM",
+    gradient: "from-emerald-500 via-teal-600 to-cyan-600",
+  },
+];
 
-  // Environmental Capability Sensor (hover: hover & !prefers-reduced-motion)
+export default function ProjectsSection() {
+  const [activeFilter, setActiveFilter] = useState<FilterCategory>("All");
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
+
+  // Custom Cursor for Desktop Project Hover (72px circle with "VIEW")
+  const [cursorPos, setCursorPos] = useState({ x: -100, y: -100 });
+  const [isHoveringCard, setIsHoveringCard] = useState(false);
+  const [isPointerDevice, setIsPointerDevice] = useState(false);
+
   useEffect(() => {
-    const hoverQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
-    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const query = window.matchMedia("(hover: hover) and (pointer: fine)");
+    setIsPointerDevice(query.matches);
 
-    const evaluateCapabilities = () => {
-      setCanHover(hoverQuery.matches && !motionQuery.matches);
+    const handleMouseMove = (e: MouseEvent) => {
+      setCursorPos({ x: e.clientX, y: e.clientY });
     };
 
-    evaluateCapabilities();
-    hoverQuery.addEventListener("change", evaluateCapabilities);
-    motionQuery.addEventListener("change", evaluateCapabilities);
+    if (query.matches) {
+      window.addEventListener("mousemove", handleMouseMove);
+    }
 
     return () => {
-      hoverQuery.removeEventListener("change", evaluateCapabilities);
-      motionQuery.removeEventListener("change", evaluateCapabilities);
+      window.removeEventListener("mousemove", handleMouseMove);
     };
   }, []);
 
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!canHover || !cardRef.current) return;
+  const toggleExpand = useCallback((id: string) => {
+    try {
+      playUISound("click");
+    } catch {}
+    setExpandedCards((prev) => ({ ...prev, [id]: !prev[id] }));
+  }, []);
 
-    const rect = cardRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+  // Filter projects (separate featured from secondary grid)
+  const featuredProject = PROJECTS_DATA[0];
+  const otherProjects = PROJECTS_DATA.slice(1);
 
-    // Strict Restraint Tuning: Clamped between -8deg and +8deg
-    const xPct = x / rect.width - 0.5;
-    const yPct = y / rect.height - 0.5;
-    const rotateX = (yPct * -16).toFixed(2);
-    const rotateY = (xPct * 16).toFixed(2);
-
-    // Hardware Boost: scale3d(1.02, 1.02, 1.02) to mitigate Chromium subpixel rendering blur
-    setTransformStyle(
-      `scale3d(1.02, 1.02, 1.02) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`
-    );
-
-    setGlarePos({
-      x: Math.round(x),
-      y: Math.round(y),
-      opacity: 1,
-    });
-  }, [canHover]);
-
-  const handleMouseEnter = () => {
-    if (!canHover) return;
-    playUISound("hover");
-  };
-
-  const handleMouseLeave = () => {
-    if (!canHover) return;
-    setTransformStyle("scale3d(1, 1, 1) rotateX(0deg) rotateY(0deg)");
-    setGlarePos((prev) => ({ ...prev, opacity: 0 }));
-  };
-
-  return (
-    <div
-      ref={cardRef}
-      tabIndex={0}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      className={`group relative ${project.asymmetricSpan} rounded-2xl sm:rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] select-none`}
-      style={{
-        transformStyle: "preserve-3d",
-        backfaceVisibility: "hidden",
-      }}
-    >
-      {/* 3D Motion Container */}
-      <div
-        className="relative w-full h-full rounded-2xl sm:rounded-3xl border border-neutral-800 bg-neutral-900/90 backdrop-blur-xl transition-transform duration-200 ease-out shadow-2xl overflow-hidden flex flex-col justify-between"
-        style={{
-          transform: transformStyle || "scale3d(1, 1, 1) rotateX(0deg) rotateY(0deg)",
-          transformStyle: "preserve-3d",
-          backfaceVisibility: "hidden",
-        }}
-      >
-        {/* ========================================================================= */}
-        {/* LAYER 0 (Base Skin): translateZ(0px) - Mesh Texture & Ambient Vignette   */}
-        {/* ========================================================================= */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 pointer-events-none rounded-2xl sm:rounded-3xl"
-          style={{ transform: "translateZ(0px)" }}
-        >
-          {/* Crisp Engineering Grid Mesh */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:16px_16px] sm:bg-[size:20px_20px]" />
-          
-          {/* Subtle Corner Lighting Aura */}
-          <div className="absolute -top-16 -right-16 w-36 sm:w-52 h-36 sm:h-52 bg-[#F97316]/10 rounded-full blur-3xl group-hover:bg-[#F97316]/20 transition-colors duration-500" />
-          <div className="absolute -bottom-16 -left-16 w-36 sm:w-52 h-36 sm:h-52 bg-[#EF4444]/10 rounded-full blur-3xl group-hover:bg-[#EF4444]/20 transition-colors duration-500" />
-
-          {/* Specular Glare Tracking Overlay */}
-          <div
-            className="absolute inset-0 transition-opacity duration-300"
-            style={{
-              opacity: glarePos.opacity,
-              background: `radial-gradient(circle 380px at ${glarePos.x}px ${glarePos.y}px, rgba(249, 115, 22, 0.16), transparent 75%)`,
-            }}
-          />
-        </div>
-
-        {/* Content Wrapper */}
-        <div className="relative p-4 sm:p-6 md:p-8 flex flex-col justify-between h-full gap-4 sm:gap-6 z-10">
-
-          {/* Top Info Bar */}
-          <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] sm:text-xs font-black text-[#F97316] tracking-[0.2em] uppercase px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-[#F97316]/10 border border-[#F97316]/20 shadow-[0_0_12px_rgba(249,115,22,0.15)]">
-              PROJECT {project.id}
-            </span>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="font-mono text-[9px] sm:text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
-                Production
-              </span>
-            </div>
-          </div>
-
-          {/* ========================================================================= */}
-          {/* LAYER 1 (Mid-ground Copy): translateZ(35px) - Headings, Copy, & Mockup    */}
-          {/* ========================================================================= */}
-          <div
-            className="space-y-3 sm:space-y-4"
-            style={{ transform: "translateZ(35px)" }}
-          >
-            <div>
-              <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-widest text-neutral-500 block mb-0.5 sm:mb-1">
-                {project.subtitle}
-              </span>
-              <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-wide uppercase group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-[#FDE68A] transition-all duration-300">
-                {project.title}
-              </h3>
-            </div>
-
-            <p className="text-xs sm:text-sm text-neutral-400 leading-relaxed font-sans line-clamp-3">
-              {project.description}
-            </p>
-
-            {/* Simulated Live Console Dashboard */}
-            <div className="w-full rounded-xl sm:rounded-2xl overflow-hidden border border-neutral-800 bg-neutral-950 shadow-xl group-hover:border-[#F97316]/30 transition-colors duration-300">
-              <div className="w-full px-3 py-1.5 sm:px-3.5 sm:py-2 bg-neutral-900/90 border-b border-neutral-800 flex items-center justify-between select-none">
-                <div className="flex items-center gap-1 sm:gap-1.5">
-                  <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-rose-500/80" />
-                  <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-amber-500/80" />
-                  <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-emerald-500/80" />
-                </div>
-                <div className="flex-1 mx-2 sm:mx-4 py-0.5 rounded bg-black/60 border border-neutral-800 text-[8px] sm:text-[9px] text-neutral-500 tracking-wider flex items-center justify-center gap-1 font-mono uppercase truncate">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-40">
-                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                  </svg>
-                  {project.url}
-                </div>
-                <span className="text-[7px] sm:text-[8px] font-mono text-neutral-600 uppercase font-bold">3D-MESH</span>
-              </div>
-              <div className="relative w-full">
-                {project.mockup}
-              </div>
-            </div>
-          </div>
-
-          {/* ========================================================================= */}
-          {/* LAYER 2 (Foreground Accents): translateZ(65px) - Badges & Trigger Chips   */}
-          {/* ========================================================================= */}
-          <div
-            className="space-y-3 sm:space-y-4 pt-1 sm:pt-2"
-            style={{ transform: "translateZ(65px)" }}
-          >
-            {/* Tech Stack Visual Tags */}
-            <div className="flex flex-wrap gap-1 sm:gap-1.5">
-              {project.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-wider px-2 sm:px-2.5 py-0.5 rounded-full border border-orange-500/20 bg-orange-500/10 text-orange-400 group-hover:border-orange-500/40 group-hover:bg-orange-500/15 transition-colors"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-
-            {/* Action Trigger Chips */}
-            <div className="flex items-center gap-2 sm:gap-3 w-full">
-              <a
-                href={project.github}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => playUISound("click")}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-mono font-bold tracking-widest text-white border border-neutral-700 bg-neutral-800/60 hover:bg-neutral-800 hover:border-neutral-500 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <GithubIcon size={13} />
-                SOURCE
-              </a>
-              <a
-                href={project.demo}
-                onClick={() => playUISound("click")}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-mono font-bold tracking-widest text-white bg-gradient-to-r from-[#F97316] to-[#EF4444] hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <ExternalLink size={13} />
-                LIVE DEMO
-              </a>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Main Projects Section with Anti-Gravity Background Canvas
-// ---------------------------------------------------------------------------
-export default function ProjectsSection() {
-  const projects: ProjectItem[] = [
-    {
-      id: "01",
-      title: "Cricket Team Fund Tracker",
-      subtitle: "Fintech & Ledger Architecture",
-      description: "Full-stack budget ledger designed to reconcile team funds, tournament entry fees, match expenditures, and player micro-contributions with automated settlement calculation.",
-      tags: ["Next.js", "Tailwind CSS", "Node.js", "MongoDB"],
-      github: "https://github.com/saivikas1278/cricket-fund-tracker",
-      demo: "#",
-      url: "cricket-fund-tracker.dev",
-      asymmetricSpan: "lg:col-span-7",
-      mockup: (
-        <div className="w-full min-h-[190px] p-3 sm:p-4 flex flex-col justify-between bg-neutral-950 font-mono text-xs text-neutral-400 select-none">
-          <div className="flex justify-between items-center pb-1.5 border-b border-neutral-800">
-            <span className="font-bold text-white uppercase text-[9px] sm:text-[10px]">Team Ledger Console</span>
-            <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold text-[8px] sm:text-[9px] tracking-wider">SYNCED</span>
-          </div>
-          <div className="grid grid-cols-12 gap-2 sm:gap-2.5 my-auto py-1">
-            <div className="col-span-5 p-2 sm:p-2.5 rounded-xl bg-neutral-900 border border-neutral-800 space-y-0.5 sm:space-y-1">
-              <span className="text-[8px] sm:text-[9px] text-neutral-500 uppercase block truncate">Treasury Balance</span>
-              <span className="text-sm sm:text-base font-bold text-white tracking-tight truncate block">₹48,250.00</span>
-              <span className="text-[7px] sm:text-[8px] text-emerald-400 block">↑ 12% surplus</span>
-            </div>
-            <div className="col-span-7 p-2 sm:p-2.5 rounded-xl bg-neutral-900 border border-neutral-800 space-y-1 sm:space-y-1.5">
-              <span className="text-[8px] sm:text-[9px] text-neutral-500 uppercase block truncate">Recent Inflows</span>
-              <div className="flex justify-between text-[8px] sm:text-[9px]">
-                <span className="text-neutral-300 truncate">Vikas (Fee)</span>
-                <span className="text-emerald-400 font-bold">+₹500</span>
-              </div>
-              <div className="flex justify-between text-[8px] sm:text-[9px]">
-                <span className="text-neutral-300 truncate">Sai (Kit)</span>
-                <span className="text-emerald-400 font-bold">+₹1k</span>
-              </div>
-            </div>
-          </div>
-          <div className="space-y-1 pt-1 border-t border-neutral-800">
-            <div className="flex justify-between text-[8px] uppercase text-neutral-500">
-              <span>Goal: League Cap</span>
-              <span className="text-white font-bold">85%</span>
-            </div>
-            <div className="h-1.5 w-full rounded-full bg-neutral-900 overflow-hidden">
-              <div className="h-full w-[85%] rounded-full bg-gradient-to-r from-[#F59E0B] to-[#EF4444]" />
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: "02",
-      title: "Cricket Auction Engine",
-      subtitle: "Real-Time WebSocket Protocol",
-      description: "Interactive real-time bidding room for cricket leagues. Synchronizes multi-client bid state, purse balances, countdown timers, and active player spotlights with zero broadcast delay.",
-      tags: ["React", "Express", "Socket.io", "MongoDB"],
-      github: "https://github.com/saivikas1278/cricket-auction-app",
-      demo: "#",
-      url: "cricket-auction.io",
-      asymmetricSpan: "lg:col-span-5",
-      mockup: (
-        <div className="w-full min-h-[190px] p-3 sm:p-4 flex flex-col justify-between bg-neutral-950 font-mono text-xs text-neutral-400 select-none">
-          <div className="flex justify-between items-center pb-1.5 border-b border-neutral-800">
-            <span className="font-bold text-white uppercase text-[9px] sm:text-[10px] flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
-              AUCTION FLOOR
-            </span>
-            <span className="px-1.5 py-0.5 rounded bg-neutral-900 border border-neutral-800 text-[8px] sm:text-[9px] text-neutral-400 font-bold">RND 1</span>
-          </div>
-          <div className="p-2 sm:p-2.5 rounded-xl bg-neutral-900 border border-neutral-800 space-y-1.5 my-auto shadow-lg">
-            <div className="flex justify-between items-start">
-              <div className="truncate">
-                <span className="text-[7px] sm:text-[8px] text-neutral-500 uppercase block truncate">Player</span>
-                <span className="text-xs sm:text-sm font-bold text-white truncate block">Sai Vikas (All-Rounder)</span>
-              </div>
-              <span className="px-1.5 py-0.5 rounded bg-[#F59E0B]/10 border border-[#F59E0B]/20 text-[#FDE68A] font-bold text-[7px] sm:text-[8px] shrink-0">BASE 5L</span>
-            </div>
-            <div className="flex justify-between items-center pt-1 border-t border-neutral-800">
-              <div>
-                <span className="text-[7px] sm:text-[8px] text-neutral-500 uppercase block">High Bid</span>
-                <span className="text-sm sm:text-base font-black text-[#F97316]">14.50 Lakhs</span>
-              </div>
-              <div className="text-right">
-                <span className="text-[7px] sm:text-[8px] text-neutral-500 uppercase block">Leader</span>
-                <span className="text-[9px] sm:text-[10px] font-bold text-white uppercase truncate block">Royal Strikers</span>
-              </div>
-            </div>
-          </div>
-          <div className="text-[8px] sm:text-[9px] bg-neutral-900/60 p-1.5 rounded border border-neutral-800 flex justify-between items-center">
-            <span className="text-neutral-500 truncate">Vizag Titans raised to 14.0L</span>
-            <span className="text-neutral-600 text-[7px] sm:text-[8px] shrink-0 ml-1">1.8s ago</span>
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: "03",
-      title: "E-Commerce Payment Core",
-      subtitle: "Secure Cart & Checkout API",
-      description: "Robust retail web application featuring parameterized catalog searches, persistent cart sessions, cryptographic transaction signing, and Stripe API checkout webhooks.",
-      tags: ["JavaScript", "Node.js", "MongoDB", "Stripe"],
-      github: "https://github.com/saivikas1278/ecommerce-website",
-      demo: "#",
-      url: "shop-platform.com",
-      asymmetricSpan: "lg:col-span-5",
-      mockup: (
-        <div className="w-full min-h-[190px] p-3 sm:p-4 flex flex-col justify-between bg-neutral-950 font-mono text-xs text-neutral-400 select-none">
-          <div className="flex justify-between items-center pb-1.5 border-b border-neutral-800">
-            <span className="font-bold text-white uppercase text-[9px] sm:text-[10px]">Stripe Gateway</span>
-            <span className="text-[8px] sm:text-[9px] text-neutral-500 uppercase">256-BIT SSL</span>
-          </div>
-          <div className="grid grid-cols-12 gap-1.5 sm:gap-2 my-auto items-center py-1">
-            <div className="col-span-7 p-2 sm:p-2.5 rounded-xl bg-neutral-900 border border-neutral-800 space-y-0.5 sm:space-y-1">
-              <span className="text-[7px] sm:text-[8px] text-neutral-500 uppercase block">Items</span>
-              <div className="flex justify-between text-[8px] sm:text-[9px] text-neutral-300">
-                <span className="truncate">Bat x1</span>
-                <span className="font-bold text-white">₹12,499</span>
-              </div>
-              <div className="flex justify-between text-[8px] sm:text-[9px] text-neutral-300">
-                <span className="truncate">Balls x6</span>
-                <span className="font-bold text-white">₹2,800</span>
-              </div>
-            </div>
-            <div className="col-span-5 p-2 sm:p-2.5 rounded-xl bg-neutral-900 border border-[#F97316]/20 space-y-0.5 sm:space-y-1 text-center">
-              <span className="text-[7px] sm:text-[8px] text-neutral-500 uppercase block">Net</span>
-              <span className="text-xs sm:text-sm font-black text-white block">₹15,299</span>
-              <span className="px-1 py-0.5 rounded bg-orange-500/10 text-orange-400 text-[7px] sm:text-[8px] font-bold uppercase inline-block">SECURE</span>
-            </div>
-          </div>
-          <div className="w-full py-1.5 sm:py-2 rounded-xl bg-[#F97316] text-white font-bold text-[8px] sm:text-[9px] tracking-widest uppercase text-center shadow-[0_0_12px_rgba(249,115,22,0.3)]">
-            AUTHORIZE STRIPE
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: "04",
-      title: "Geographical Weather Metric",
-      subtitle: "OpenWeather REST Pipeline",
-      description: "Atmospheric intelligence client providing real-time barometric pressure readings, wind vector angles, localized humidity indices, and predictive 5-day meteorological forecasts.",
-      tags: ["HTML5", "CSS3", "JavaScript", "REST API"],
-      github: "https://github.com/saivikas1278/weather-dashboard",
-      demo: "#",
-      url: "weather-metrics.net",
-      asymmetricSpan: "lg:col-span-7",
-      mockup: (
-        <div className="w-full min-h-[190px] p-3 sm:p-4 flex flex-col justify-between bg-neutral-950 font-mono text-xs text-neutral-400 select-none">
-          <div className="flex justify-between items-center pb-1.5 border-b border-neutral-800">
-            <span className="font-bold text-white uppercase text-[9px] sm:text-[10px]">OpenWeather Feed</span>
-            <span className="text-[8px] sm:text-[9px] text-[#38BDF8] uppercase font-bold">17.68° N</span>
-          </div>
-          <div className="grid grid-cols-12 gap-1.5 sm:gap-2.5 my-auto items-center py-1">
-            <div className="col-span-6 p-2 sm:p-2.5 rounded-xl bg-neutral-900 border border-neutral-800 text-center space-y-0.5">
-              <span className="text-[7px] sm:text-[8px] text-neutral-500 uppercase block truncate">Visakhapatnam</span>
-              <span className="text-xl sm:text-2xl font-black text-white tracking-tight">32°C</span>
-              <span className="text-[7px] sm:text-[8px] text-[#38BDF8] uppercase block">Haze</span>
-            </div>
-            <div className="col-span-6 p-2 sm:p-2.5 rounded-xl bg-neutral-900 border border-neutral-800 space-y-0.5 sm:space-y-1 text-[8px] sm:text-[9px]">
-              <div className="flex justify-between">
-                <span className="text-neutral-500">Wind</span>
-                <span className="text-neutral-300 font-bold">14 km/h</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-neutral-500">Humidity</span>
-                <span className="text-neutral-300 font-bold">78%</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-neutral-500">Baro</span>
-                <span className="text-neutral-300 font-bold">1008 hPa</span>
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 text-center text-[8px] sm:text-[9px]">
-            <div className="bg-neutral-900/60 p-1 rounded border border-neutral-800">
-              <span className="text-neutral-500 block">Wed</span>
-              <span className="font-bold text-white">33° / 29°</span>
-            </div>
-            <div className="bg-neutral-900/60 p-1 rounded border border-neutral-800">
-              <span className="text-neutral-500 block">Thu</span>
-              <span className="font-bold text-white">31° / 28°</span>
-            </div>
-            <div className="bg-neutral-900/60 p-1 rounded border border-neutral-800">
-              <span className="text-neutral-500 block">Fri</span>
-              <span className="font-bold text-[#38BDF8]">28° / 25°</span>
-            </div>
-          </div>
-        </div>
-      ),
-    },
-  ];
+  const filteredSecondaryProjects = otherProjects.filter((item) => {
+    if (activeFilter === "All") return true;
+    return item.category.includes(activeFilter);
+  });
 
   return (
     <section
       id="projects"
-      aria-label="Featured Engineering Projects"
-      className="relative py-16 sm:py-24 md:py-32 bg-neutral-950 border-t border-neutral-800/80 overflow-hidden"
+      aria-label="Selected Work & Projects"
+      className="relative py-20 lg:py-[120px] w-full bg-[var(--bg)] overflow-hidden"
     >
-      {/* ========================================================================= */}
-      {/* 1. ENVIRONMENT & ANTI-GRAVITY PHYSICS (Ambient Floating Particles)        */}
-      {/* Pure GPU-Accelerated CSS Keyframes for Weightless Zero-Gravity Simulation */}
-      {/* ========================================================================= */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes float-antigravity-1 {
-          0% { transform: translateY(0px) translateX(0px) rotate(0deg); opacity: 0.15; }
-          50% { transform: translateY(-70px) translateX(25px) rotate(18deg); opacity: 0.45; }
-          100% { transform: translateY(0px) translateX(0px) rotate(0deg); opacity: 0.15; }
-        }
-        @keyframes float-antigravity-2 {
-          0% { transform: translateY(0px) translateX(0px) rotate(0deg); opacity: 0.2; }
-          50% { transform: translateY(-110px) translateX(-35px) rotate(-22deg); opacity: 0.55; }
-          100% { transform: translateY(0px) translateX(0px) rotate(0deg); opacity: 0.2; }
-        }
-        @keyframes float-antigravity-3 {
-          0% { transform: translateY(0px) translateX(0px) scale(0.9); opacity: 0.1; }
-          50% { transform: translateY(-90px) translateX(40px) scale(1.15); opacity: 0.35; }
-          100% { transform: translateY(0px) translateX(0px) scale(0.9); opacity: 0.1; }
-        }
-        .anim-float-1 { animation: float-antigravity-1 14s ease-in-out infinite; }
-        .anim-float-2 { animation: float-antigravity-2 19s ease-in-out infinite; }
-        .anim-float-3 { animation: float-antigravity-3 23s ease-in-out infinite; }
-      ` }} />
-
-      {/* Micro-Geometric Ambient Tokens */}
-      <div aria-hidden="true" className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        <span className="anim-float-1 absolute top-[12%] left-[8%] font-mono text-xs sm:text-sm text-[#F59E0B]/30 select-none">{"{ }"}</span>
-        <span className="anim-float-2 absolute top-[28%] right-[10%] font-mono text-sm sm:text-base text-[#F97316]/25 select-none">{"< / >"}</span>
-        <span className="anim-float-3 absolute bottom-[18%] left-[14%] font-mono text-xs sm:text-sm text-[#EF4444]/30 select-none">{"const"}</span>
-        <span className="anim-float-1 absolute bottom-[35%] right-[12%] font-mono text-xs sm:text-sm text-amber-500/25 select-none">{"=>"}</span>
-        <span className="anim-float-2 absolute top-[65%] left-[6%] font-mono text-[10px] sm:text-xs text-orange-400/25 select-none">{"[ ]"}</span>
-
-        {/* Ambient Blur Circles & Micro Dots */}
-        <div className="anim-float-2 absolute top-[18%] left-[22%] w-2 h-2 rounded-full bg-[#F59E0B]/30 blur-[1px]" />
-        <div className="anim-float-1 absolute top-[42%] right-[25%] w-3 h-3 rounded-full bg-[#F97316]/25 blur-[1px]" />
-        <div className="anim-float-3 absolute bottom-[22%] right-[30%] w-2.5 h-2.5 rounded-full bg-[#EF4444]/30 blur-[1px]" />
-        <div className="anim-float-1 absolute top-[80%] left-[35%] w-1.5 h-1.5 rounded-full bg-amber-400/35" />
-        <div className="anim-float-2 absolute top-[30%] left-[48%] w-2 h-2 rounded-full bg-orange-500/25" />
-        <div className="anim-float-3 absolute top-[5%] right-[40%] w-2 h-2 rounded-full bg-rose-400/25" />
-
-        {/* Deep Atmosphere Spotlights */}
-        <div className="absolute top-[20%] -left-[10%] w-[320px] sm:w-[500px] h-[320px] sm:h-[500px] rounded-full bg-[#F59E0B]/5 blur-[100px] sm:blur-[130px]" />
-        <div className="absolute bottom-[20%] -right-[10%] w-[320px] sm:w-[500px] h-[320px] sm:h-[500px] rounded-full bg-[#EF4444]/5 blur-[100px] sm:blur-[130px]" />
-      </div>
-
-      <div className="max-w-6xl mx-auto px-3 sm:px-6 relative z-10">
-
-        {/* Section Header */}
-        <header className="flex flex-col items-center text-center max-w-2xl mx-auto mb-10 sm:mb-16 md:mb-20">
-          <span className="text-[10px] sm:text-xs font-black text-[#F97316] tracking-[0.25em] uppercase block bg-[#F97316]/10 border border-[#F97316]/20 shadow-[0_0_12px_rgba(249,115,22,0.15)] px-3.5 py-1 rounded-full mb-4 sm:mb-6">
-            02 / WORK
-          </span>
-          <h2 className="font-display font-black text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white tracking-tight uppercase">
-            Featured Projects
-          </h2>
-          <div className="h-[3px] w-20 sm:w-28 md:w-32 bg-gradient-to-r from-[#F59E0B] via-[#F97316] to-[#EF4444] rounded-full mt-3 sm:mt-4 shadow-[0_0_10px_rgba(249,115,22,0.5)] mb-4 sm:mb-6" />
-          <p className="font-sans text-xs sm:text-sm md:text-base leading-relaxed text-neutral-400 px-2">
-            Real-world systems engineered with multi-layered 3D perspective depth, live data pipelines, and responsive algorithms.
-          </p>
-        </header>
-
-        {/* ========================================================================= */}
-        {/* 2. ASYMMETRIC GRID CANVAS (Unified Perspective: 1200px)                   */}
-        {/* ========================================================================= */}
-        <div 
-          className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-stretch"
-          style={{ perspective: "1200px" }}
+      {/* ===================================================================== */}
+      {/* CUSTOM 72px "VIEW" CURSOR FOR DESKTOP CARD HOVER                      */}
+      {/* ===================================================================== */}
+      {isPointerDevice && (
+        <motion.div
+          aria-hidden="true"
+          style={{
+            left: cursorPos.x,
+            top: cursorPos.y,
+            transform: "translate(-50%, -50%)",
+          }}
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{
+            scale: isHoveringCard ? 1 : 0,
+            opacity: isHoveringCard ? 1 : 0,
+          }}
+          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+          className="fixed pointer-events-none z-[80] w-[72px] h-[72px] rounded-full bg-[#FF7A1A] text-[#07070A] font-mono text-xs font-bold flex items-center justify-center shadow-[0_0_30px_rgba(255,122,26,0.6)] select-none"
         >
-          {projects.map((project) => (
-            <ParallaxTiltCard key={project.id} project={project} />
-          ))}
+          VIEW
+        </motion.div>
+      )}
+
+      <div className="max-w-[1200px] mx-auto px-6 lg:px-12">
+        {/* ===================================================================== */}
+        {/* 1. SECTION HEADER (REVEAL)                                            */}
+        {/* ===================================================================== */}
+        <motion.header
+          initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
+          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-12 lg:mb-16 flex flex-col items-start text-left"
+        >
+          {/* Eyebrow */}
+          <div className="inline-flex items-center gap-2 mb-3 select-none">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+            <span className="font-mono text-xs font-medium uppercase tracking-[0.12em] text-[var(--accent)]">
+              ● 03 / PROJECTS
+            </span>
+          </div>
+
+          {/* H2 Title */}
+          <h2 className="font-display font-semibold text-[clamp(2rem,4vw,3.25rem)] tracking-[-0.03em] leading-[1.05] text-[var(--text)] max-w-[16ch]">
+            Selected work
+          </h2>
+
+          {/* Description */}
+          <p className="mt-3.5 font-sans text-base sm:text-lg text-[var(--text-muted)] leading-[1.7] max-w-2xl">
+            Systems I&apos;ve designed, built and shipped.
+          </p>
+        </motion.header>
+
+        {/* ===================================================================== */}
+        {/* 2. FEATURED PROJECT (CRICKET AUCTION ENGINE) - FULL WIDTH 2-COL CARD   */}
+        {/* ===================================================================== */}
+        <motion.div
+          initial={{ opacity: 0, y: 28, filter: "blur(6px)" }}
+          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.7, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+          onMouseEnter={() => setIsHoveringCard(true)}
+          onMouseLeave={() => setIsHoveringCard(false)}
+          className="group relative rounded-[20px] bg-[var(--surface)] border border-[var(--border)] hover:border-[#FF7A1A]/40 hover:-translate-y-1.5 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] shadow-2xl p-6 sm:p-8 lg:p-10 mb-14 overflow-hidden"
+        >
+          {/* Subtle Corner Ambient Glow */}
+          <div
+            aria-hidden="true"
+            className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-gradient-to-br from-[#FFB020]/15 via-[#FF7A1A]/10 to-transparent blur-3xl pointer-events-none group-hover:opacity-100 transition-opacity"
+          />
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center relative z-10">
+
+            {/* Left Column (Text & Controls) */}
+            <div className="lg:col-span-6 flex flex-col justify-between space-y-5">
+              <div>
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="font-mono text-xs font-semibold text-[#FF7A1A] uppercase tracking-[0.12em] px-3 py-1 rounded-full bg-[#FF7A1A]/10 border border-[#FF7A1A]/25">
+                    FEATURED // 01
+                  </span>
+                  <span className="font-mono text-xs text-[var(--text-dim)] uppercase">
+                    REAL-TIME SUITE
+                  </span>
+                </div>
+
+                <h3 className="font-display font-bold text-2xl sm:text-3xl lg:text-4xl tracking-tight text-white group-hover:text-[#FF7A1A] transition-colors">
+                  {featuredProject.title}
+                </h3>
+                <p className="font-mono text-xs text-[var(--accent)] font-medium mt-1">
+                  {featuredProject.subtitle}
+                </p>
+
+                <p className="font-sans text-sm sm:text-base text-[var(--text-muted)] leading-relaxed mt-4">
+                  {featuredProject.description}
+                </p>
+              </div>
+
+              {/* Tech Stack Chips */}
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {featuredProject.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="font-mono text-xs px-2.5 py-1 rounded-md bg-zinc-900/90 border border-white/10 text-[var(--text-muted)]"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <a
+                  href={featuredProject.demo}
+                  onClick={() => { try { playUISound("click"); } catch {} }}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold text-[#07070A] bg-gradient-to-r from-[#FFB020] via-[#FF7A1A] to-[#FF3D54] shadow-[0_0_20px_-2px_rgba(255,122,26,0.35)] hover:shadow-[0_0_30px_rgba(255,122,26,0.55)] hover:scale-105 active:scale-95 transition-all select-none"
+                >
+                  <span>Live Demo</span>
+                  <ExternalLink size={13} />
+                </a>
+
+                <a
+                  href={featuredProject.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => { try { playUISound("click"); } catch {} }}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-mono font-medium text-[var(--text)] bg-[var(--surface-2)] border border-[var(--border)] hover:border-[var(--border-strong)] hover:text-white active:scale-95 transition-all select-none"
+                >
+                  <GithubIcon size={14} />
+                  <span>Source</span>
+                </a>
+
+                {/* View Details Expand Toggle */}
+                <button
+                  onClick={() => toggleExpand(featuredProject.id)}
+                  className="inline-flex items-center gap-1.5 text-xs font-mono text-[var(--text-dim)] hover:text-white transition-colors py-2 px-2"
+                >
+                  <span>
+                    {expandedCards[featuredProject.id] ? "Hide details" : "View details"}
+                  </span>
+                  {expandedCards[featuredProject.id] ? (
+                    <ChevronUp size={14} />
+                  ) : (
+                    <ChevronDown size={14} />
+                  )}
+                </button>
+              </div>
+
+              {/* Expandable Problem → Solution → Impact Section */}
+              <AnimatePresence>
+                {expandedCards[featuredProject.id] && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                    className="overflow-hidden pt-4 border-t border-white/[0.08] space-y-3"
+                  >
+                    <div>
+                      <span className="font-mono text-[10px] uppercase font-bold text-red-400 tracking-wider block">
+                        ● Problem
+                      </span>
+                      <p className="font-sans text-xs text-[var(--text-muted)] leading-relaxed mt-0.5">
+                        {featuredProject.problem}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="font-mono text-[10px] uppercase font-bold text-amber-400 tracking-wider block">
+                        ● Solution
+                      </span>
+                      <p className="font-sans text-xs text-[var(--text-muted)] leading-relaxed mt-0.5">
+                        {featuredProject.solution}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="font-mono text-[10px] uppercase font-bold text-emerald-400 tracking-wider block">
+                        ● Impact
+                      </span>
+                      <p className="font-sans text-xs text-[var(--text-muted)] leading-relaxed mt-0.5">
+                        {featuredProject.impact}
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Right Column: Browser Window Mockup with macOS dots & Live UI */}
+            <div className="lg:col-span-6 relative">
+              {/* Backlight Glow Behind Mockup */}
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#FFB020]/25 via-[#FF7A1A]/15 to-transparent blur-2xl pointer-events-none"
+              />
+
+              {/* macOS Browser Window Mockup */}
+              <div className="relative rounded-2xl bg-zinc-950 border border-white/15 shadow-2xl overflow-hidden">
+                {/* macOS Window Top Bar */}
+                <div className="h-9 px-4 bg-zinc-900 border-b border-white/10 flex items-center justify-between">
+                  {/* Traffic Light Dots */}
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#FF5F56] inline-block" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#FFBD2E] inline-block" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#27C93F] inline-block" />
+                  </div>
+
+                  {/* Browser URL Bar */}
+                  <div className="px-4 py-0.5 rounded-md bg-black/60 border border-white/5 font-mono text-[10px] text-[var(--text-dim)] truncate max-w-[220px]">
+                    https://cricket-auction.saivikas.dev
+                  </div>
+
+                  <span className="w-6" />
+                </div>
+
+                {/* Browser Interior: Simulated Live Auction Room Interface */}
+                <div className="p-4 sm:p-5 bg-black/80 font-mono text-xs space-y-3.5 select-none">
+                  {/* Room Status Ribbon */}
+                  <div className="flex items-center justify-between pb-2 border-b border-white/10 text-[11px]">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="text-white font-bold">AUCTION FLOOR #01</span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded bg-zinc-900 text-amber-400 border border-amber-500/20 text-[10px]">
+                      ROUND 1
+                    </span>
+                  </div>
+
+                  {/* Current Active Lot Highlight */}
+                  <div className="p-3.5 rounded-xl bg-zinc-900/90 border border-white/10 space-y-2">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <span className="text-[10px] text-[var(--text-dim)] uppercase block">
+                          Current Player Lot
+                        </span>
+                        <span className="font-display font-bold text-sm sm:text-base text-white block">
+                          Cheepu Sai Vikas
+                        </span>
+                        <span className="text-[10px] text-[var(--text-muted)]">
+                          All-Rounder · Right-Hand Bat · Right-Arm Medium
+                        </span>
+                      </div>
+                      <span className="px-2 py-0.5 rounded bg-[#FF7A1A]/10 border border-[#FF7A1A]/30 text-[#FF7A1A] font-bold text-[10px]">
+                        BASE: 10L
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                      <div>
+                        <span className="text-[10px] text-[var(--text-dim)] uppercase block">
+                          Current Top Bid
+                        </span>
+                        <span className="font-bold text-base sm:text-lg text-[#FF7A1A]">
+                          ₹ 14.50 Lakhs
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] text-[var(--text-dim)] uppercase block">
+                          Leading Franchise
+                        </span>
+                        <span className="font-bold text-xs text-white uppercase">
+                          Royal Strikers
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Real-time Bid Log Stream */}
+                  <div className="space-y-1.5 text-[10px]">
+                    <div className="p-2 rounded-lg bg-zinc-900/60 border border-white/5 flex items-center justify-between">
+                      <span className="text-[var(--text-muted)]">
+                        ⚡ Vizag Titans raised bid to ₹14.00L
+                      </span>
+                      <span className="text-[var(--text-dim)]">1.2s ago</span>
+                    </div>
+                    <div className="p-2 rounded-lg bg-zinc-900/60 border border-white/5 flex items-center justify-between">
+                      <span className="text-emerald-400">
+                        ✓ Royal Strikers countered at ₹14.50L
+                      </span>
+                      <span className="text-[var(--text-dim)]">now</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </motion.div>
+
+        {/* ===================================================================== */}
+        {/* 3. FILTER BAR WITH ANIMATED LAYOUTID PILL                             */}
+        {/* ===================================================================== */}
+        <div className="flex flex-wrap items-center gap-2 mb-8 select-none">
+          {(["All", "Full-Stack", "Real-time", "Frontend"] as FilterCategory[]).map(
+            (category) => {
+              const isActive = activeFilter === category;
+              return (
+                <button
+                  key={category}
+                  onClick={() => {
+                    try { playUISound("click"); } catch {}
+                    setActiveFilter(category);
+                  }}
+                  className={`relative px-4 py-2 rounded-full font-mono text-xs uppercase tracking-[0.12em] transition-colors duration-200 ${
+                    isActive ? "text-[#07070A] font-semibold" : "text-[var(--text-muted)] hover:text-white"
+                  }`}
+                >
+                  {/* Sliding layoutId Pill Background */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="projects-filter-pill"
+                      transition={{
+                        type: "spring" as const,
+                        stiffness: 400,
+                        damping: 32,
+                      }}
+                      className="absolute inset-0 rounded-full bg-gradient-to-r from-[#FFB020] via-[#FF7A1A] to-[#FF3D54] shadow-[0_0_20px_rgba(255,122,26,0.35)]"
+                    />
+                  )}
+                  <span className="relative z-10">{category}</span>
+                </button>
+              );
+            }
+          )}
         </div>
+
+        {/* ===================================================================== */}
+        {/* 4. 2-COLUMN GRID OF OTHER PROJECTS (1 COL MOBILE)                     */}
+        {/* ===================================================================== */}
+        <motion.div
+          layout
+          className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8"
+        >
+          <AnimatePresence>
+            {filteredSecondaryProjects.map((project) => {
+              const isExpanded = !!expandedCards[project.id];
+
+              return (
+                <motion.article
+                  layout
+                  key={project.id}
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.96 }}
+                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                  onMouseEnter={() => setIsHoveringCard(true)}
+                  onMouseLeave={() => setIsHoveringCard(false)}
+                  className="group relative rounded-[20px] bg-[var(--surface)] border border-[var(--border)] hover:border-[#FF7A1A]/40 hover:-translate-y-1.5 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] shadow-xl p-5 sm:p-6 flex flex-col justify-between overflow-hidden"
+                >
+                  <div>
+                    {/* Top Media Container: 16:10 Ratio, 14px Radius, Gradient Initial Placeholder */}
+                    <div className="relative aspect-[16/10] w-full rounded-[14px] overflow-hidden mb-5 bg-zinc-950 border border-white/5 group/img">
+                      {/* Generative Gradient Background Placeholder */}
+                      <div
+                        className={`absolute inset-0 bg-gradient-to-br ${project.gradient} opacity-80 group-hover:scale-106 transition-transform duration-600 ease-[cubic-bezier(0.22,1,0.36,1)] flex items-center justify-center`}
+                      >
+                        <span className="font-display font-black text-4xl sm:text-5xl text-white/40 tracking-wider">
+                          {project.initials}
+                        </span>
+                      </div>
+
+                      {/* Dark Gradient Overlay at the bottom */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none" />
+
+                      {/* Floating Glass "↗" Circle Button in Top Right (rotates 45deg on hover) */}
+                      <a
+                        href={project.demo !== "#" ? project.demo : project.github}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Open ${project.title}`}
+                        onClick={() => { try { playUISound("click"); } catch {} }}
+                        className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/75 border border-white/15 text-white flex items-center justify-center backdrop-blur-md shadow-lg group-hover:rotate-45 transition-transform duration-300 z-20"
+                      >
+                        <ArrowUpRight size={16} />
+                      </a>
+
+                      {/* Bottom Image Tag Overlay */}
+                      <div className="absolute bottom-3 left-3 z-10">
+                        <span className="font-mono text-[10px] text-white/90 bg-black/60 px-2 py-0.5 rounded border border-white/10">
+                          {project.subtitle}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Metadata & Title */}
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-mono text-xs font-semibold text-[#FF7A1A] tracking-wider">
+                        {project.index}
+                      </span>
+                      <span className="font-mono text-[10px] text-[var(--text-dim)] uppercase">
+                        {project.category.join(" · ")}
+                      </span>
+                    </div>
+
+                    <h3 className="font-display font-bold text-xl sm:text-2xl text-white tracking-tight group-hover:text-[#FF7A1A] transition-colors">
+                      {project.title}
+                    </h3>
+
+                    <p className="font-sans text-sm text-[var(--text-muted)] line-clamp-2 leading-relaxed mt-2">
+                      {project.description}
+                    </p>
+
+                    {/* Tech Chips */}
+                    <div className="flex flex-wrap gap-1.5 mt-4">
+                      {project.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="font-mono text-[11px] px-2 py-0.5 rounded-md bg-zinc-900 border border-white/5 text-[var(--text-muted)]"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Footer Action Row + Expand Details */}
+                  <div className="pt-5 mt-5 border-t border-[var(--border)] space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        {/* Live Demo Small Button */}
+                        <a
+                          href={project.demo}
+                          onClick={() => { try { playUISound("click"); } catch {} }}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold text-[#07070A] bg-gradient-to-r from-[#FFB020] to-[#FF7A1A] shadow-md hover:scale-105 active:scale-95 transition-all select-none"
+                        >
+                          <span>Live Demo</span>
+                          <ExternalLink size={11} />
+                        </a>
+
+                        {/* Source Ghost Button */}
+                        <a
+                          href={project.github}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => { try { playUISound("click"); } catch {} }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono text-[var(--text)] bg-[var(--surface-2)] border border-[var(--border)] hover:border-[var(--border-strong)] hover:text-white active:scale-95 transition-all select-none"
+                        >
+                          <GithubIcon size={13} />
+                          <span>Source</span>
+                        </a>
+                      </div>
+
+                      {/* Expand Details Trigger */}
+                      <button
+                        onClick={() => toggleExpand(project.id)}
+                        className="inline-flex items-center gap-1 text-[11px] font-mono text-[var(--text-dim)] hover:text-white transition-colors"
+                      >
+                        <span>{isExpanded ? "Hide" : "Details"}</span>
+                        {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                      </button>
+                    </div>
+
+                    {/* Expandable Problem → Solution → Impact Drawer */}
+                    <AnimatePresence>
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                          className="overflow-hidden pt-3 border-t border-white/5 space-y-2.5 text-xs font-sans"
+                        >
+                          <div>
+                            <span className="font-mono text-[10px] uppercase font-bold text-red-400 tracking-wider block">
+                              ● Problem
+                            </span>
+                            <p className="text-[var(--text-muted)] leading-relaxed mt-0.5">
+                              {project.problem}
+                            </p>
+                          </div>
+
+                          <div>
+                            <span className="font-mono text-[10px] uppercase font-bold text-amber-400 tracking-wider block">
+                              ● Solution
+                            </span>
+                            <p className="text-[var(--text-muted)] leading-relaxed mt-0.5">
+                              {project.solution}
+                            </p>
+                          </div>
+
+                          <div>
+                            <span className="font-mono text-[10px] uppercase font-bold text-emerald-400 tracking-wider block">
+                              ● Impact
+                            </span>
+                            <p className="text-[var(--text-muted)] leading-relaxed mt-0.5">
+                              {project.impact}
+                            </p>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                </motion.article>
+              );
+            })}
+          </AnimatePresence>
+        </motion.div>
 
       </div>
     </section>
