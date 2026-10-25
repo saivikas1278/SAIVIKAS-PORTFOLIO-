@@ -1,348 +1,419 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import { motion } from "motion/react";
+import {
+  Code2,
+  Server,
+  Database,
+  Radio,
+  Wrench,
+  Terminal,
+} from "lucide-react";
+import {
+  SiReact,
+  SiNextdotjs,
+  SiTailwindcss,
+  SiTypescript,
+  SiJavascript,
+  SiNodedotjs,
+  SiExpress,
+  SiMongodb,
+  SiPostgresql,
+  SiFirebase,
+  SiRedis,
+  SiSocketdotio,
+  SiGit,
+  SiGithubactions,
+  SiDocker,
+  SiVercel,
+  SiPostman,
+  SiFigma,
+  SiPython,
+  SiCplusplus,
+  SiHtml5,
+  SiCss,
+  SiFramer,
+} from "react-icons/si";
 import { playUISound } from "@/utils/sound-manager";
 
+type ProficiencyLevel = "daily" | "comfortable" | "learning";
+
+interface SkillItem {
+  name: string;
+  icon: React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }>;
+  brandColor: string;
+  level: ProficiencyLevel;
+}
+
+interface SkillGroup {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  skills: SkillItem[];
+}
+
+const SKILL_GROUPS: SkillGroup[] = [
+  {
+    id: "frontend",
+    title: "Frontend",
+    description: "Component hierarchies, virtual DOM optimization & modern design systems.",
+    icon: Code2,
+    skills: [
+      { name: "React 19", icon: SiReact, brandColor: "#61DAFB", level: "daily" },
+      { name: "Next.js 15", icon: SiNextdotjs, brandColor: "#FFFFFF", level: "daily" },
+      { name: "TypeScript", icon: SiTypescript, brandColor: "#3178C6", level: "daily" },
+      { name: "Tailwind CSS", icon: SiTailwindcss, brandColor: "#06B6D4", level: "daily" },
+      { name: "Framer Motion", icon: SiFramer, brandColor: "#0055FF", level: "comfortable" },
+      { name: "HTML5 / CSS3", icon: SiHtml5, brandColor: "#E34F26", level: "daily" },
+    ],
+  },
+  {
+    id: "backend",
+    title: "Backend",
+    description: "Event-driven services, RESTful endpoints & secure session handling.",
+    icon: Server,
+    skills: [
+      { name: "Node.js", icon: SiNodedotjs, brandColor: "#5FA04E", level: "daily" },
+      { name: "Express.js", icon: SiExpress, brandColor: "#FFFFFF", level: "daily" },
+      { name: "REST APIs", icon: Server, brandColor: "#FF7A1A", level: "daily" },
+      { name: "JWT Auth", icon: Code2, brandColor: "#FFB020", level: "comfortable" },
+      { name: "Webhooks", icon: Radio, brandColor: "#22C55E", level: "comfortable" },
+    ],
+  },
+  {
+    id: "databases",
+    title: "Databases",
+    description: "Document models, relational schemas & low-latency caching layers.",
+    icon: Database,
+    skills: [
+      { name: "MongoDB", icon: SiMongodb, brandColor: "#47A248", level: "daily" },
+      { name: "PostgreSQL", icon: SiPostgresql, brandColor: "#4169E1", level: "comfortable" },
+      { name: "Firebase", icon: SiFirebase, brandColor: "#FFCA28", level: "comfortable" },
+      { name: "Redis", icon: SiRedis, brandColor: "#DC382D", level: "learning" },
+    ],
+  },
+  {
+    id: "realtime-devops",
+    title: "Real-time & DevOps",
+    description: "Persistent bid pipes, containerization & automated CI/CD deployments.",
+    icon: Radio,
+    skills: [
+      { name: "WebSockets", icon: Radio, brandColor: "#FF7A1A", level: "daily" },
+      { name: "Socket.io", icon: SiSocketdotio, brandColor: "#FFFFFF", level: "daily" },
+      { name: "Git & GitHub", icon: SiGit, brandColor: "#F05032", level: "daily" },
+      { name: "CI/CD Actions", icon: SiGithubactions, brandColor: "#2088FF", level: "comfortable" },
+      { name: "Docker", icon: SiDocker, brandColor: "#2496ED", level: "learning" },
+      { name: "Vercel", icon: SiVercel, brandColor: "#FFFFFF", level: "daily" },
+    ],
+  },
+  {
+    id: "tools",
+    title: "Tools",
+    description: "API testing clients, UI wireframing & package management tooling.",
+    icon: Wrench,
+    skills: [
+      { name: "VS Code", icon: Code2, brandColor: "#007ACC", level: "daily" },
+      { name: "Postman", icon: SiPostman, brandColor: "#FF6C37", level: "daily" },
+      { name: "Figma", icon: SiFigma, brandColor: "#F24E1E", level: "comfortable" },
+      { name: "Linux CLI", icon: Terminal, brandColor: "#4EAA25", level: "comfortable" },
+    ],
+  },
+  {
+    id: "languages",
+    title: "Languages",
+    description: "Strict typed scripting, system programming & competitive algorithms.",
+    icon: Terminal,
+    skills: [
+      { name: "TypeScript", icon: SiTypescript, brandColor: "#3178C6", level: "daily" },
+      { name: "JavaScript", icon: SiJavascript, brandColor: "#F7DF1E", level: "daily" },
+      { name: "Python", icon: SiPython, brandColor: "#3776AB", level: "comfortable" },
+      { name: "C / C++", icon: SiCplusplus, brandColor: "#00599C", level: "comfortable" },
+    ],
+  },
+];
+
+// Marquee Logo Items (Rows 1 & 2)
+const MARQUEE_ROW_1 = [
+  { name: "React 19", icon: SiReact, color: "#61DAFB" },
+  { name: "Next.js 15", icon: SiNextdotjs, color: "#FFFFFF" },
+  { name: "TypeScript", icon: SiTypescript, color: "#3178C6" },
+  { name: "Tailwind CSS", icon: SiTailwindcss, color: "#06B6D4" },
+  { name: "Node.js", icon: SiNodedotjs, color: "#5FA04E" },
+  { name: "Express", icon: SiExpress, color: "#FFFFFF" },
+  { name: "MongoDB", icon: SiMongodb, color: "#47A248" },
+  { name: "Socket.io", icon: SiSocketdotio, color: "#FFFFFF" },
+  { name: "Framer Motion", icon: SiFramer, color: "#0055FF" },
+  { name: "HTML5", icon: SiHtml5, color: "#E34F26" },
+];
+
+const MARQUEE_ROW_2 = [
+  { name: "PostgreSQL", icon: SiPostgresql, color: "#4169E1" },
+  { name: "Firebase", icon: SiFirebase, color: "#FFCA28" },
+  { name: "Redis", icon: SiRedis, color: "#DC382D" },
+  { name: "Docker", icon: SiDocker, color: "#2496ED" },
+  { name: "Git", icon: SiGit, color: "#F05032" },
+  { name: "GitHub Actions", icon: SiGithubactions, color: "#2088FF" },
+  { name: "Postman", icon: SiPostman, color: "#FF6C37" },
+  { name: "Python", icon: SiPython, color: "#3776AB" },
+  { name: "C++", icon: SiCplusplus, color: "#00599C" },
+  { name: "Vercel", icon: SiVercel, color: "#FFFFFF" },
+];
+
 export default function SkillsSection() {
+  const [hoveredChip, setHoveredChip] = useState<string | null>(null);
+
   return (
     <section
       id="skills"
-      aria-label="Skills & Technologies"
-      className="relative py-16 sm:py-24 md:py-32 bg-[#030303] border-t border-white/5 overflow-hidden"
+      aria-label="Technical Skills & Stack"
+      className="relative py-20 lg:py-[120px] w-full bg-[var(--bg)] overflow-hidden"
     >
-      {/* Background Ambient Glow */}
-      <div 
-        aria-hidden="true" 
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[600px] md:w-[700px] h-[340px] sm:h-[600px] md:h-[700px] rounded-full bg-gradient-to-tr from-[#F59E0B]/5 via-[#F97316]/4 to-transparent blur-[90px] sm:blur-[140px] pointer-events-none" 
-      />
+      {/* Pure CSS keyframe animations for 60fps marquee */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes marquee-scroll-left {
+          0% { transform: translate3d(0, 0, 0); }
+          100% { transform: translate3d(-50%, 0, 0); }
+        }
+        @keyframes marquee-scroll-right {
+          0% { transform: translate3d(-50%, 0, 0); }
+          100% { transform: translate3d(0, 0, 0); }
+        }
+        .anim-marquee-left {
+          display: flex;
+          width: max-content;
+          will-change: transform;
+          animation: marquee-scroll-left 40s linear infinite;
+        }
+        .anim-marquee-right {
+          display: flex;
+          width: max-content;
+          will-change: transform;
+          animation: marquee-scroll-right 40s linear infinite;
+        }
+        .anim-marquee-left:hover, .anim-marquee-right:hover {
+          animation-play-state: paused;
+        }
+      ` }} />
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 relative z-10">
-        
-        {/* Section Header */}
-        <header className="flex flex-col items-center text-center max-w-2xl mx-auto mb-10 sm:mb-16 md:mb-20">
-          <span className="text-[10px] sm:text-xs font-black text-[#F97316] tracking-[0.25em] uppercase block bg-[#F97316]/10 border border-[#F97316]/20 shadow-[0_0_12px_rgba(249,115,22,0.15)] px-3.5 py-1 rounded-full mb-4 sm:mb-6">
-            03 / CAPABILITIES
-          </span>
-          <h2 className="font-display font-black text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white tracking-tight uppercase">
-            Skills Bento Grid
+      <div className="max-w-[1200px] mx-auto px-6 lg:px-12">
+        {/* =================================================================== */}
+        {/* 1. SECTION HEADER                                                   */}
+        {/* =================================================================== */}
+        <motion.header
+          initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
+          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-10 lg:mb-12 flex flex-col items-start text-left"
+        >
+          {/* Eyebrow */}
+          <div className="inline-flex items-center gap-2 mb-3 select-none">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+            <span className="font-mono text-xs font-medium uppercase tracking-[0.12em] text-[var(--accent)]">
+              ● 04 / SKILLS
+            </span>
+          </div>
+
+          {/* H2 Title */}
+          <h2 className="font-display font-semibold text-[clamp(2rem,4vw,3.25rem)] tracking-[-0.03em] leading-[1.05] text-[var(--text)]">
+            Tools I build with
           </h2>
-          <div className="h-[3px] w-20 sm:w-28 md:w-32 bg-gradient-to-r from-[#F59E0B] via-[#F97316] to-[#EF4444] rounded-full mt-3 sm:mt-4 shadow-[0_0_10px_rgba(249,115,22,0.5)] mb-4 sm:mb-6" />
-          <p className="font-sans text-xs sm:text-sm md:text-base leading-relaxed text-zinc-400 px-2">
-            Every core technology engineered into an isolated, responsive bento matrix.
-          </p>
-        </header>
 
-        {/* ========================================================================= */}
-        {/* RESPONSIVE BENTO MATRIX: 2 COLS MOBILE -> 3 COLS TABLET -> 4 COLS DESKTOP */}
-        {/* ========================================================================= */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+          {/* Description line & Global Proficiency Legend */}
+          <div className="w-full flex flex-wrap items-center justify-between gap-4 mt-3.5">
+            <p className="font-sans text-base sm:text-lg text-[var(--text-muted)] leading-[1.7] max-w-xl">
+              Core technologies, architectural frameworks, and production tools I leverage to build resilient systems.
+            </p>
 
-          {/* 1. HERO WIDE CELL: REACT 19 (Mobile: col-span-2 | Desktop: col-span-2) */}
-          <article
-            tabIndex={0}
-            onMouseEnter={() => playUISound("hover")}
-            className="group relative col-span-2 lg:col-span-2 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-7 bg-zinc-950/80 border border-white/10 hover:border-[#00D8FF]/40 shadow-lg hover:shadow-[0_15px_35px_rgba(0,216,255,0.12)] transition-all duration-300 ease-out motion-safe:hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00D8FF] flex flex-col justify-between overflow-hidden"
-          >
-            <div className="absolute -top-10 -right-10 w-28 sm:w-36 h-28 sm:h-36 bg-[#00D8FF]/10 rounded-full blur-2xl group-hover:bg-[#00D8FF]/20 transition-colors pointer-events-none" />
-            <div className="flex items-start justify-between gap-2">
-              <div className="p-2 sm:p-2.5 rounded-xl bg-[#00D8FF]/10 border border-[#00D8FF]/20 text-[#00D8FF] shrink-0">
-                <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6 sm:w-7 sm:h-7" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="12" cy="12" r="2" fill="currentColor" />
-                  <ellipse cx="12" cy="12" rx="12" ry="4.5" transform="rotate(30 12 12)" stroke="currentColor" strokeWidth="1.5" />
-                  <ellipse cx="12" cy="12" rx="12" ry="4.5" transform="rotate(90 12 12)" stroke="currentColor" strokeWidth="1.5" />
-                  <ellipse cx="12" cy="12" rx="12" ry="4.5" transform="rotate(150 12 12)" stroke="currentColor" strokeWidth="1.5" />
-                </svg>
-              </div>
-              <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-[#00D8FF]/10 border border-[#00D8FF]/20 text-[#00D8FF] shrink-0">
-                PRIMARY CORE
+            {/* Proficiency Dots Legend */}
+            <div className="inline-flex items-center gap-4 px-3.5 py-1.5 rounded-full bg-[var(--surface)] border border-[var(--border)] font-mono text-[11px] text-[var(--text-dim)] select-none shadow-sm">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#22C55E]" />
+                <span className="text-zinc-300">Daily use</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#FF7A1A]" />
+                <span className="text-zinc-300">Comfortable</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#38BDF8]" />
+                <span className="text-zinc-300">Learning</span>
               </span>
             </div>
-            <div className="space-y-1 pt-3 sm:pt-4">
-              <span className="text-[9px] sm:text-[10px] font-mono uppercase tracking-widest text-zinc-500 block">Frontend Framework</span>
-              <h3 className="text-lg sm:text-xl md:text-2xl font-black text-white tracking-wide group-hover:text-[#00D8FF] transition-colors">React 19</h3>
-              <p className="text-[11px] sm:text-xs text-zinc-400 font-medium line-clamp-2">Dynamic SPAs, reusable custom hooks & virtual DOM optimization.</p>
-            </div>
-          </article>
+          </div>
+        </motion.header>
 
-          {/* 2. CELL: NEXT.JS (Col 1 on Mobile) */}
-          <article
-            tabIndex={0}
-            onMouseEnter={() => playUISound("hover")}
-            className="group relative col-span-1 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 md:p-6 bg-zinc-950/80 border border-white/10 hover:border-white/30 shadow-lg hover:shadow-xl transition-all duration-300 ease-out motion-safe:hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white flex flex-col justify-between overflow-hidden"
-          >
-            <div className="flex items-start justify-between gap-1">
-              <div className="p-2 sm:p-2.5 rounded-xl bg-white/10 border border-white/20 text-white shrink-0">
-                <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 sm:w-6 sm:h-6" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="12" cy="12" r="11" stroke="currentColor" strokeWidth="1.5" />
-                  <path d="M17.5 17.5L9.25 7.25V16.75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M14.75 7.25H16.25V12.75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              </div>
-              <span className="text-[9px] sm:text-[10px] font-mono font-bold text-zinc-500">v16.2</span>
-            </div>
-            <div className="space-y-0.5 pt-3 sm:pt-4">
-              <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-widest text-zinc-500 block truncate">Fullstack</span>
-              <h3 className="text-base sm:text-lg md:text-xl font-black text-white group-hover:text-zinc-200 transition-colors">Next.js</h3>
-              <p className="text-[10px] sm:text-xs text-zinc-400 font-medium line-clamp-1">SSR & Server Comp.</p>
-            </div>
-          </article>
-
-          {/* 3. CELL: JAVASCRIPT (Col 1 on Mobile) */}
-          <article
-            tabIndex={0}
-            onMouseEnter={() => playUISound("hover")}
-            className="group relative col-span-1 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 md:p-6 bg-zinc-950/80 border border-white/10 hover:border-[#F7DF1E]/40 shadow-lg hover:shadow-[0_15px_35px_rgba(247,223,30,0.1)] transition-all duration-300 ease-out motion-safe:hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F7DF1E] flex flex-col justify-between overflow-hidden"
-          >
-            <div className="flex items-start justify-between gap-1">
-              <div className="p-2 sm:p-2.5 rounded-xl bg-[#F7DF1E]/10 border border-[#F7DF1E]/20 text-[#F7DF1E] shrink-0">
-                <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 sm:w-6 sm:h-6" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M0 0h24v24H0V0zm20.33 18.53c-.34-.6-.73-1.07-1.46-1.07-.48 0-.83.25-.83.76 0 .52.38.7.9.93 1.62.68 2.65 1.2 2.65 3.09 0 1.9-1.46 3.09-3.56 3.09-2.07 0-3.13-1.09-3.5-2.23l1.88-1.1c.34.6.76 1 1.48 1 .48 0 .86-.23.86-.74 0-.5-.38-.68-.96-.94-1.52-.66-2.58-1.12-2.58-3.03 0-1.8 1.34-3.03 3.32-3.03 1.77 0 2.82.9 3.2 2.03l-1.96 1.23zm-8.38-2.03h2.14v8.03h-2.14v-8.03z" />
-                </svg>
-              </div>
-              <span className="text-[8px] sm:text-[9px] font-bold text-[#F7DF1E] bg-[#F7DF1E]/10 px-1.5 py-0.5 rounded-full">ES6+</span>
-            </div>
-            <div className="space-y-0.5 pt-3 sm:pt-4">
-              <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-widest text-zinc-500 block truncate">Language</span>
-              <h3 className="text-base sm:text-lg md:text-xl font-black text-white group-hover:text-[#F7DF1E] transition-colors truncate">JavaScript</h3>
-              <p className="text-[10px] sm:text-xs text-zinc-400 font-medium line-clamp-1">Async & DOM API.</p>
-            </div>
-          </article>
-
-          {/* 4. CELL: NODE.JS (Col 1 on Mobile) */}
-          <article
-            tabIndex={0}
-            onMouseEnter={() => playUISound("hover")}
-            className="group relative col-span-1 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 md:p-6 bg-zinc-950/80 border border-white/10 hover:border-[#8CC84B]/40 shadow-lg hover:shadow-[0_15px_35px_rgba(140,200,75,0.1)] transition-all duration-300 ease-out motion-safe:hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8CC84B] flex flex-col justify-between overflow-hidden"
-          >
-            <div className="flex items-start justify-between gap-1">
-              <div className="p-2 sm:p-2.5 rounded-xl bg-[#8CC84B]/10 border border-[#8CC84B]/20 text-[#8CC84B] shrink-0">
-                <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 sm:w-6 sm:h-6" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2L4 6.5V15.5L12 20L20 15.5V6.5L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-                  <path d="M12 11V20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  <path d="M16 8.75L12 11L8 8.75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <span className="text-[8px] sm:text-[9px] font-bold text-emerald-400">REST</span>
-            </div>
-            <div className="space-y-0.5 pt-3 sm:pt-4">
-              <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-widest text-zinc-500 block truncate">Backend</span>
-              <h3 className="text-base sm:text-lg md:text-xl font-black text-white group-hover:text-[#8CC84B] transition-colors">Node.js</h3>
-              <p className="text-[10px] sm:text-xs text-zinc-400 font-medium line-clamp-1">Event loop & sockets.</p>
-            </div>
-          </article>
-
-          {/* 5. VERTICAL METRIC CARD: HIGH CONTRAST INDICATOR (Col 1 on Mobile) */}
-          <article
-            tabIndex={0}
-            onMouseEnter={() => playUISound("hover")}
-            className="group relative col-span-1 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 md:p-6 bg-gradient-to-br from-zinc-900 to-zinc-950 border border-[#F97316]/30 shadow-lg hover:shadow-[0_15px_35px_rgba(249,115,22,0.18)] transition-all duration-300 ease-out motion-safe:hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F97316] flex flex-col justify-between overflow-hidden"
-          >
-            <div className="flex items-center justify-between">
-              <span className="w-2 h-2 rounded-full bg-[#F97316] animate-ping" />
-              <span className="text-[8px] sm:text-[9px] font-mono font-black text-[#F97316] tracking-widest uppercase">AUDIT</span>
-            </div>
-            <div className="space-y-0.5 py-1">
-              <div className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight font-display">100%</div>
-              <div className="text-[9px] sm:text-xs font-bold uppercase tracking-wider text-[#F97316] truncate">Core Web Vitals</div>
-            </div>
-            <p className="text-[9px] sm:text-[10px] text-zinc-500 font-mono truncate">Zero layout shifts.</p>
-          </article>
-
-          {/* 6. HERO WIDE CELL: TAILWIND CSS (Mobile: col-span-2 | Desktop: col-span-2) */}
-          <article
-            tabIndex={0}
-            onMouseEnter={() => playUISound("hover")}
-            className="group relative col-span-2 lg:col-span-2 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-7 bg-zinc-950/80 border border-white/10 hover:border-[#38BDF8]/40 shadow-lg hover:shadow-[0_15px_35px_rgba(56,189,248,0.12)] transition-all duration-300 ease-out motion-safe:hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38BDF8] flex flex-col justify-between overflow-hidden"
-          >
-            <div className="absolute -top-10 -right-10 w-28 sm:w-36 h-28 sm:h-36 bg-[#38BDF8]/10 rounded-full blur-2xl group-hover:bg-[#38BDF8]/20 transition-colors pointer-events-none" />
-            <div className="flex items-start justify-between gap-2">
-              <div className="p-2 sm:p-2.5 rounded-xl bg-[#38BDF8]/10 border border-[#38BDF8]/20 text-[#38BDF8] shrink-0">
-                <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 sm:w-7 sm:h-7" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 6C9 6 7.2 7.5 6.6 10.5C7.5 9.3 8.7 8.7 10.2 8.7C12.3 8.7 13.8 10.2 14.85 11.775C15.9 13.35 17.1 15 20.4 15C23.4 15 25.2 13.5 25.8 10.5C24.9 11.7 23.7 12.3 22.2 12.3C20.1 12.3 18.6 10.8 17.55 9.225C16.5 7.65 15.3 6 12 6ZM6.6 13.5C3.6 13.5 1.8 15 1.2 18C2.1 16.8 3.3 16.2 4.8 16.2C6.9 16.2 8.4 17.7 9.45 19.275C10.5 20.85 11.7 22.5 15 22.5C18 22.5 19.8 21 20.4 18C19.5 19.2 18.3 19.8 16.8 19.8C14.7 19.8 13.2 18.3 12.15 16.725C11.1 15.15 9.9 13.5 6.6 13.5Z" />
-                </svg>
-              </div>
-              <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-[#38BDF8]/10 border border-[#38BDF8]/20 text-[#38BDF8] shrink-0">
-                ENGINE v4
-              </span>
-            </div>
-            <div className="space-y-1 pt-3 sm:pt-4">
-              <span className="text-[9px] sm:text-[10px] font-mono uppercase tracking-widest text-zinc-500 block">Design System</span>
-              <h3 className="text-lg sm:text-xl md:text-2xl font-black text-white tracking-wide group-hover:text-[#38BDF8] transition-colors">Tailwind CSS</h3>
-              <p className="text-[11px] sm:text-xs text-zinc-400 font-medium line-clamp-2">Responsive layouts, custom grid architectures & zero-runtime CSS.</p>
-            </div>
-          </article>
-
-          {/* 7. CELL: PYTHON (Col 1 on Mobile) */}
-          <article
-            tabIndex={0}
-            onMouseEnter={() => playUISound("hover")}
-            className="group relative col-span-1 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 md:p-6 bg-zinc-950/80 border border-white/10 hover:border-[#3776AB]/40 shadow-lg hover:shadow-[0_15px_35px_rgba(55,118,171,0.1)] transition-all duration-300 ease-out motion-safe:hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3776AB] flex flex-col justify-between overflow-hidden"
-          >
-            <div className="flex items-start justify-between gap-1">
-              <div className="p-2 sm:p-2.5 rounded-xl bg-[#3776AB]/10 border border-[#3776AB]/20 text-[#3776AB] shrink-0">
-                <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 sm:w-6 sm:h-6" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M11.91 0c-1.85 0-3.4.15-4.47.41-2.22.56-2.58 1.83-2.58 4.23v2.09h7.24v.98H2.17C.71 7.71 0 8.65 0 10.97v4.54c0 2.22.95 3.03 2.63 3.32 1.63.29 3.23.29 4.8 0 .8-.15 1.54-.41 1.54-1.74v-2.32h4.74c1.65 0 2.63-.82 2.92-2.5.3-1.63.3-3.26 0-4.89-.25-1.42-1.07-2.12-2.58-2.32v-.93h.93c1.62 0 2.5-.74 2.8-2.35.3-1.62.3-3.2 0-4.82-.25-1.39-1.02-2.12-2.55-2.25C14.39.09 13.2 0 11.91 0zm-3.66 1.82c.48 0 .87.39.87.87s-.39.87-.87.87a.87.87 0 1 1 0-1.74zM12 11.75c1.62 0 2.8.12 3.86.35 2.14.47 2.14 1.82 2.14 4.14v2.03h-7.14v-.96h9.72c1.46 0 2.15-.9 2.15-3.13v-4.45c0-2.19-.92-3.03-2.55-3.32a18.23 18.23 0 0 0-4.73 0c-.8.15-1.5.42-1.5 1.71v2.32H9.21c-1.63 0-2.61.82-2.9 2.47-.3 1.66-.3 3.32 0 4.98.26 1.42 1.05 2.12 2.55 2.32v.93h-.93c-1.63 0-2.5.75-2.8 2.38-.3 1.6-.3 3.2 0 4.8.25 1.4 1.02 2.13 2.55 2.26 1.45.1 2.64.19 3.92.19 1.86 0 3.42-.15 4.5-.41 2.22-.56 2.58-1.83 2.58-4.24v-2.08h-7.24v-.99h9.94c1.46 0 2.17-.94 2.17-3.26v-4.54c0-2.22-.95-3.03-2.63-3.32-1.63-.29-3.23-.29-4.8 0-.8.15-1.54.41-1.54 1.74v2.32H12zm3.66 8.56c.48 0 .87.39.87.87s-.39.87-.87.87a.87.87 0 1 1 0-1.74z" />
-                </svg>
-              </div>
-              <span className="text-[9px] sm:text-[10px] font-mono text-zinc-500">v3.x</span>
-            </div>
-            <div className="space-y-0.5 pt-3 sm:pt-4">
-              <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-widest text-zinc-500 block truncate">Scripting</span>
-              <h3 className="text-base sm:text-lg md:text-xl font-black text-white group-hover:text-[#3776AB] transition-colors">Python</h3>
-              <p className="text-[10px] sm:text-xs text-zinc-400 font-medium line-clamp-1">Data & algorithms.</p>
-            </div>
-          </article>
-
-          {/* 8. CELL: HTML5 (Col 1 on Mobile) */}
-          <article
-            tabIndex={0}
-            onMouseEnter={() => playUISound("hover")}
-            className="group relative col-span-1 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 md:p-6 bg-zinc-950/80 border border-white/10 hover:border-[#E34F26]/40 shadow-lg hover:shadow-[0_15px_35px_rgba(227,79,38,0.1)] transition-all duration-300 ease-out motion-safe:hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E34F26] flex flex-col justify-between overflow-hidden"
-          >
-            <div className="flex items-start justify-between gap-1">
-              <div className="p-2 sm:p-2.5 rounded-xl bg-[#E34F26]/10 border border-[#E34F26]/20 text-[#E34F26] shrink-0">
-                <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 sm:w-6 sm:h-6" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M1.5 0h21l-1.9 21.2L12 24l-8.6-2.8L1.5 0zm17.3 5.6H5.2l.4 4.5h10.4l-.4 4.5-3.6 1.2-3.6-1.2-.2-2.3H5.8l.4 4.6 5.8 1.9 5.8-1.9.9-10.3-.2-1z" />
-                </svg>
-              </div>
-              <span className="text-[8px] sm:text-[9px] font-bold text-[#E34F26]">SEO</span>
-            </div>
-            <div className="space-y-0.5 pt-3 sm:pt-4">
-              <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-widest text-zinc-500 block truncate">Markup</span>
-              <h3 className="text-base sm:text-lg md:text-xl font-black text-white group-hover:text-[#E34F26] transition-colors">HTML5</h3>
-              <p className="text-[10px] sm:text-xs text-zinc-400 font-medium line-clamp-1">Semantic layout.</p>
-            </div>
-          </article>
-
-          {/* 9. CELL: CSS3 (Col 1 on Mobile) */}
-          <article
-            tabIndex={0}
-            onMouseEnter={() => playUISound("hover")}
-            className="group relative col-span-1 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 md:p-6 bg-zinc-950/80 border border-white/10 hover:border-[#1572B6]/40 shadow-lg hover:shadow-[0_15px_35px_rgba(21,114,182,0.1)] transition-all duration-300 ease-out motion-safe:hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1572B6] flex flex-col justify-between overflow-hidden"
-          >
-            <div className="flex items-start justify-between gap-1">
-              <div className="p-2 sm:p-2.5 rounded-xl bg-[#1572B6]/10 border border-[#1572B6]/20 text-[#1572B6] shrink-0">
-                <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 sm:w-6 sm:h-6" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M1.5 0h21l-1.9 21.2L12 24l-8.6-2.8L1.5 0zm17.3 5.6H5.2l.4 4.5h10.4l-.4 4.5-3.6 1.2-3.6-1.2-.2-2.3H5.8l.4 4.6 5.8 1.9 5.8-1.9.9-10.3-.2-1z" className="opacity-30" />
-                  <path d="M12 2.2L3.5 5l1.5 13.5 7 2.3 7-2.3 1.5-13.5-8.5-2.8zm5.2 6.8H8.8l-.2 2.2h8.4l-.4 4.4-4.6 1.5-4.6-1.5-.2-2.2H9.8l.2 1.2 2 1 2-1 .2-2.2H8.2l-.2-2.2h9.6l-.2 2.2z" />
-                </svg>
-              </div>
-              <span className="text-[8px] sm:text-[9px] font-bold text-sky-400">Flex</span>
-            </div>
-            <div className="space-y-0.5 pt-3 sm:pt-4">
-              <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-widest text-zinc-500 block truncate">Styling</span>
-              <h3 className="text-base sm:text-lg md:text-xl font-black text-white group-hover:text-[#1572B6] transition-colors">CSS3</h3>
-              <p className="text-[10px] sm:text-xs text-zinc-400 font-medium line-clamp-1">Fluid animations.</p>
-            </div>
-          </article>
-
-          {/* 10. CELL: FIGMA (Col 1 on Mobile) */}
-          <article
-            tabIndex={0}
-            onMouseEnter={() => playUISound("hover")}
-            className="group relative col-span-1 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 md:p-6 bg-zinc-950/80 border border-white/10 hover:border-[#A259FF]/40 shadow-lg hover:shadow-[0_15px_35px_rgba(162,89,255,0.1)] transition-all duration-300 ease-out motion-safe:hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A259FF] flex flex-col justify-between overflow-hidden"
-          >
-            <div className="flex items-start justify-between gap-1">
-              <div className="p-2 sm:p-2.5 rounded-xl bg-[#A259FF]/10 border border-[#A259FF]/20 shrink-0">
-                <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 sm:w-6 sm:h-6" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M6 3c-1.65 0-3 1.35-3 3s1.35 3 3 3h3V3H6z" fill="#F24E1E" />
-                  <path d="M6 9c-1.65 0-3 1.35-3 3s1.35 3 3 3h3V9H6z" fill="#A259FF" />
-                  <path d="M6 15c-1.65 0-3 1.35-3 3s1.35 3 3 3h3v-6H6z" fill="#0ACF83" />
-                  <path d="M15 9c1.65 0 3-1.35 3-3s-1.35-3-3-3h-3v6h3z" fill="#FF7262" />
-                  <path d="M12 9h3c1.65 0 3 1.35 3 3s-1.35 3-3 3h-3V9z" fill="#1ABCFE" />
-                </svg>
-              </div>
-              <span className="text-[8px] sm:text-[9px] font-bold text-[#A259FF]">UI/UX</span>
-            </div>
-            <div className="space-y-0.5 pt-3 sm:pt-4">
-              <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-widest text-zinc-500 block truncate">Interface</span>
-              <h3 className="text-base sm:text-lg md:text-xl font-black text-white group-hover:text-[#A259FF] transition-colors">Figma</h3>
-              <p className="text-[10px] sm:text-xs text-zinc-400 font-medium line-clamp-1">Prototypes & UI.</p>
-            </div>
-          </article>
-
-          {/* 11. CELL: CANVA (Col 1 on Mobile) */}
-          <article
-            tabIndex={0}
-            onMouseEnter={() => playUISound("hover")}
-            className="group relative col-span-1 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 md:p-6 bg-zinc-950/80 border border-white/10 hover:border-[#00C4CC]/40 shadow-lg hover:shadow-[0_15px_35px_rgba(0,196,204,0.1)] transition-all duration-300 ease-out motion-safe:hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00C4CC] flex flex-col justify-between overflow-hidden"
-          >
-            <div className="flex items-start justify-between gap-1">
-              <div className="p-2 sm:p-2.5 rounded-xl bg-[#00C4CC]/10 border border-[#00C4CC]/20 text-[#00C4CC] shrink-0">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 sm:w-6 sm:h-6" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                  <path d="M2 12h20" />
-                </svg>
-              </div>
-              <span className="text-[8px] sm:text-[9px] font-mono font-bold text-[#00C4CC]">Art</span>
-            </div>
-            <div className="space-y-0.5 pt-3 sm:pt-4">
-              <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-widest text-zinc-500 block truncate">Visual</span>
-              <h3 className="text-base sm:text-lg md:text-xl font-black text-white group-hover:text-[#00C4CC] transition-colors">Canva</h3>
-              <p className="text-[10px] sm:text-xs text-zinc-400 font-medium line-clamp-1">Graphics & banners.</p>
-            </div>
-          </article>
-
-          {/* 12. CELL: PENPOT (Col 1 on Mobile) */}
-          <article
-            tabIndex={0}
-            onMouseEnter={() => playUISound("hover")}
-            className="group relative col-span-1 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 md:p-6 bg-zinc-950/80 border border-white/10 hover:border-[#FF176B]/40 shadow-lg hover:shadow-[0_15px_35px_rgba(255,23,107,0.1)] transition-all duration-300 ease-out motion-safe:hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF176B] flex flex-col justify-between overflow-hidden"
-          >
-            <div className="flex items-start justify-between gap-1">
-              <div className="p-2 sm:p-2.5 rounded-xl bg-[#FF176B]/10 border border-[#FF176B]/20 text-[#FF176B] shrink-0">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 sm:w-6 sm:h-6" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 19l7-7 3 3-7 7-3-3z" />
-                  <path d="M18 13l-1.5-1.5" />
-                  <path d="M14 17l-1.5-1.5" />
-                  <path d="M19 12L12 5 9 8l7 7 3-3z" />
-                  <path d="M15 8l-1.5-1.5" />
-                  <path d="M11 12l-1.5-1.5" />
-                  <path d="M9 8L2 1 1 2l7 7 1-1z" />
-                </svg>
-              </div>
-              <span className="text-[8px] sm:text-[9px] font-bold text-[#FF176B]">OS</span>
-            </div>
-            <div className="space-y-0.5 pt-3 sm:pt-4">
-              <span className="text-[8px] sm:text-[9px] font-mono uppercase tracking-widest text-zinc-500 block truncate">Vector</span>
-              <h3 className="text-base sm:text-lg md:text-xl font-black text-white group-hover:text-[#FF176B] transition-colors">Penpot</h3>
-              <p className="text-[10px] sm:text-xs text-zinc-400 font-medium line-clamp-1">Open mockups.</p>
-            </div>
-          </article>
-
-          {/* 13. MEDIA / GRAPH REPRESENTATION CONTAINER (Mobile: col-span-2 | Desktop: col-span-2) */}
-          <article
-            tabIndex={0}
-            onMouseEnter={() => playUISound("hover")}
-            className="group relative col-span-2 lg:col-span-2 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-7 bg-zinc-950/80 border border-white/10 hover:border-emerald-500/40 shadow-lg hover:shadow-[0_15px_35px_rgba(16,185,129,0.12)] transition-all duration-300 ease-out motion-safe:hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 flex flex-col justify-between overflow-hidden"
-          >
-            <div className="flex items-center justify-between pb-2.5 sm:pb-3 border-b border-white/5 font-mono text-[10px] sm:text-[11px]">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-white font-bold tracking-wider uppercase text-[10px] sm:text-xs">Telemetry</span>
-              </div>
-              <span className="text-emerald-400 font-bold text-[9px] sm:text-[10px]">24ms LATENCY</span>
-            </div>
-
-            {/* Simulated Live Latency Waveform Graph */}
-            <div className="py-2.5 sm:py-3 flex items-end justify-between gap-1 sm:gap-1.5 h-12 sm:h-16 w-full">
-              {[40, 65, 30, 85, 45, 95, 60, 75, 40, 80, 55, 90, 70, 85, 100].map((h, i) => (
+        {/* =================================================================== */}
+        {/* 2. TOP ELEMENT: TWO-ROW INFINITE MARQUEE WITH FADE MASKS            */}
+        {/* =================================================================== */}
+        <div className="relative w-full my-8 py-3 overflow-hidden select-none [mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)]">
+          {/* Row 1 (Scrolls Left at 40s) */}
+          <div className="anim-marquee-left flex items-center gap-4 mb-3">
+            {[...MARQUEE_ROW_1, ...MARQUEE_ROW_1].map((item, idx) => {
+              const Icon = item.icon;
+              return (
                 <div
-                  key={i}
-                  style={{ height: `${h}%` }}
-                  className="flex-1 rounded-full bg-gradient-to-t from-emerald-500/20 to-emerald-400 group-hover:from-emerald-500/40 group-hover:to-emerald-300 transition-all duration-300"
-                />
-              ))}
-            </div>
+                  key={`r1-${item.name}-${idx}`}
+                  className="group flex items-center gap-2.5 px-4 py-2 rounded-full bg-[var(--surface)] border border-[var(--border)] hover:border-white/20 transition-all duration-300 shrink-0 cursor-default"
+                >
+                  <Icon
+                    size={16}
+                    className="filter grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300"
+                    style={{ color: item.color }}
+                  />
+                  <span className="font-mono text-xs text-[var(--text-dim)] group-hover:text-white transition-colors duration-200">
+                    {item.name}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
 
-            <div className="flex items-center justify-between text-[10px] sm:text-xs pt-1 sm:pt-2">
-              <span className="text-zinc-500 font-mono">11+ Stack</span>
-              <span className="text-white font-mono font-bold">Zero Overhead</span>
-            </div>
-          </article>
-
+          {/* Row 2 (Scrolls Right at 40s) */}
+          <div className="anim-marquee-right flex items-center gap-4">
+            {[...MARQUEE_ROW_2, ...MARQUEE_ROW_2].map((item, idx) => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={`r2-${item.name}-${idx}`}
+                  className="group flex items-center gap-2.5 px-4 py-2 rounded-full bg-[var(--surface)] border border-[var(--border)] hover:border-white/20 transition-all duration-300 shrink-0 cursor-default"
+                >
+                  <Icon
+                    size={16}
+                    className="filter grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300"
+                    style={{ color: item.color }}
+                  />
+                  <span className="font-mono text-xs text-[var(--text-dim)] group-hover:text-white transition-colors duration-200">
+                    {item.name}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
+
+        {/* =================================================================== */}
+        {/* 3. 3-COLUMN BENTO GRID OF GROUPED CARDS                             */}
+        {/* =================================================================== */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pt-4">
+          {SKILL_GROUPS.map((group, groupIdx) => {
+            const GroupIcon = group.icon;
+
+            return (
+              <motion.article
+                key={group.id}
+                initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
+                whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{
+                  duration: 0.6,
+                  delay: groupIdx * 0.08,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                className="group relative rounded-[20px] bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--border-strong)] hover:-translate-y-1 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] shadow-xl p-6 sm:p-7 flex flex-col justify-between space-y-6 overflow-hidden"
+              >
+                {/* Card Top: 40px Icon Square + Group Title & One-line Description */}
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    {/* 40px Icon Square */}
+                    <div className="w-10 h-10 rounded-xl bg-[#FF7A1A]/10 border border-[#FF7A1A]/20 flex items-center justify-center text-[#FF7A1A] group-hover:scale-105 transition-transform duration-300 shrink-0">
+                      <GroupIcon size={20} />
+                    </div>
+
+                    <span className="font-mono text-[11px] text-[var(--text-dim)] uppercase tracking-wider">
+                      0{groupIdx + 1} //
+                    </span>
+                  </div>
+
+                  <h3 className="font-display font-bold text-xl text-white tracking-tight">
+                    {group.title}
+                  </h3>
+                  <p className="font-sans text-xs text-[var(--text-muted)] leading-relaxed mt-1 line-clamp-2">
+                    {group.description}
+                  </p>
+
+                  {/* Subtle 3-dot proficiency mini legend under group label */}
+                  <div className="flex items-center gap-3 pt-3 font-mono text-[10px] text-[var(--text-dim)] select-none">
+                    <span className="inline-flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" />
+                      <span>Daily</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#FF7A1A]" />
+                      <span>Comfortable</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#38BDF8]" />
+                      <span>Learning</span>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Skill Chips with Icon + Name + Dot + Hover Brand Color & Lift */}
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {group.skills.map((skill, chipIdx) => {
+                    const SkillIcon = skill.icon;
+                    const chipKey = `${group.id}-${skill.name}`;
+                    const isHovered = hoveredChip === chipKey;
+
+                    // Dot color according to level
+                    let dotBg = "bg-[#22C55E]";
+                    if (skill.level === "comfortable") dotBg = "bg-[#FF7A1A]";
+                    if (skill.level === "learning") dotBg = "bg-[#38BDF8]";
+
+                    return (
+                      <motion.div
+                        key={skill.name}
+                        initial={{ opacity: 0, scale: 0.92 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{
+                          delay: 0.12 + chipIdx * 0.03,
+                          duration: 0.35,
+                          ease: [0.22, 1, 0.36, 1],
+                        }}
+                        onMouseEnter={() => {
+                          setHoveredChip(chipKey);
+                          try { playUISound("hover"); } catch {}
+                        }}
+                        onMouseLeave={() => setHoveredChip(null)}
+                        style={{
+                          transform: isHovered ? "translateY(-2px)" : "translateY(0px)",
+                          borderColor: isHovered ? "var(--accent)" : undefined,
+                          backgroundColor: isHovered ? "rgba(255, 122, 26, 0.08)" : undefined,
+                        }}
+                        className="group/chip inline-flex items-center gap-2 px-3 py-2 rounded-[12px] bg-[var(--surface-2)] border border-[var(--border)] transition-all duration-200 select-none cursor-default"
+                      >
+                        {/* Skill Logo */}
+                        <SkillIcon
+                          size={15}
+                          className="transition-colors duration-200 shrink-0"
+                          style={{
+                            color: isHovered ? skill.brandColor : "#71717A",
+                          }}
+                        />
+
+                        {/* Skill Name */}
+                        <span className="font-sans text-xs font-medium text-[var(--text)] group-hover/chip:text-white transition-colors duration-200">
+                          {skill.name}
+                        </span>
+
+                        {/* Tiny Proficiency Dot */}
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${dotBg} shrink-0 opacity-80 group-hover/chip:opacity-100 transition-opacity`}
+                          title={`Proficiency: ${skill.level}`}
+                        />
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </motion.article>
+            );
+          })}
+        </div>
+
       </div>
     </section>
   );
