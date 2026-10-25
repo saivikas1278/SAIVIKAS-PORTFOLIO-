@@ -41,11 +41,12 @@ export default function ContactForm({ emailjsConfig }: ContactFormProps) {
       } else {
         throw new Error("Could not send mail successfully");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       setStatus("error");
+      const errorObject = err as { text?: string } | null;
       setErrorMessage(
-        err?.text || "Oops! Something went wrong. Please try again or reach out directly."
+        errorObject?.text || "Oops! Something went wrong. Please try again or reach out directly."
       );
     } finally {
       setLoading(false);
