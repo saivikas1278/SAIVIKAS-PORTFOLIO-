@@ -1,205 +1,350 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, useScroll } from "framer-motion";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { playUISound } from "@/utils/sound-manager";
 
 interface NavLink {
   label: string;
   href: string;
+  targetId: string;
 }
 
-const navLinks: NavLink[] = [
-  { label: "Home", href: "#home" },
-  { label: "About", href: "#about" },
-  { label: "Projects", href: "#projects" },
-  { label: "Skills", href: "#skills" },
-  { label: "Education", href: "#education" },
-  { label: "Contact", href: "#contact" },
+const NAV_LINKS: NavLink[] = [
+  { label: "HOME", href: "#home", targetId: "home" },
+  { label: "ABOUT", href: "#about", targetId: "about" },
+  { label: "PROJECTS", href: "#projects", targetId: "projects" },
+  { label: "SKILLS", href: "#skills", targetId: "skills" },
+  { label: "CERTIFICATES", href: "#certifications", targetId: "certifications" },
+  { label: "CONTACT", href: "#contact", targetId: "contact" },
 ];
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const [activeSection, setActiveSection] = useState("home");
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const { scrollYProgress } = useScroll();
+  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Load sound configuration on client mount
-  useEffect(() => {
-    const stored = localStorage.getItem("sound-enabled");
-    if (stored !== null) {
-      setSoundEnabled(stored === "true");
-    }
-  }, []);
+  const lastScrollY = useRef(0);
 
-  const toggleSound = () => {
-    const nextState = !soundEnabled;
-    setSoundEnabled(nextState);
-    localStorage.setItem("sound-enabled", String(nextState));
-    // Trigger tick feedback on toggle
-    if (nextState) {
-      setTimeout(() => {
-        playUISound("click");
-      }, 50);
-    }
-  };
-
-  // Scroll Shrink detection
+  // 1. Scroll-Direction Sensing & Blur-Glass Activation
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 40) {
+      const currentScrollY = window.scrollY;
+
+      // Blur-glass toggle at 20px
+      if (currentScrollY > 20) {
         setIsScrolled(true);
       } else {
         setIsScrolled(false);
       }
+
+      // Hide on scroll down, reveal on scroll up
+      if (currentScrollY > 80 && currentScrollY > lastScrollY.current && !mobileMenuOpen) {
+        setIsVisible(false);
+      } else {
+        setIsVisible(true);
+      }
+
+      lastScrollY.current = currentScrollY;
     };
-    window.addEventListener("scroll", handleScroll);
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [mobileMenuOpen]);
 
-  // IntersectionObserver to track scroll location and active section
+  // 2. Scroll-Spy with IntersectionObserver
   useEffect(() => {
-    const observerOptions = {
-      root: null,
-      rootMargin: "-120px 0px -40% 0px",
-      threshold: 0.1,
-    };
+    const sectionIds = ["home", "about", "projects", "skills", "certifications", "contact"];
+    const sectionElements = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
 
-    const handleIntersection = (entries: IntersectionObserverEntry[]) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          setActiveSection(entry.target.id);
-        }
-      });
-    };
+    if (sectionElements.length === 0) return;
 
-    const observer = new IntersectionObserver(handleIntersection, observerOptions);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      {
+        rootMargin: "-25% 0px -65% 0px",
+        threshold: 0,
+      }
+    );
 
-    navLinks.forEach((link) => {
-      const element = document.querySelector(link.href);
-      if (element) observer.observe(element);
-    });
-
+    sectionElements.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, []);
 
-  // Smooth scroll handler for anchor links
-  const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault();
-    const targetElement = document.querySelector(href);
-    if (targetElement) {
-      const topOffset = targetElement.getBoundingClientRect().top + window.pageYOffset - 80;
-      window.scrollTo({
-        top: topOffset,
-        behavior: "smooth",
-      });
+  // 3. Body Scroll Lock on Mobile Menu
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
     }
-  };
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
+  // 4. Smooth Scrolling with 80px Navbar Offset
+  const handleLinkClick = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
+      e.preventDefault();
+      try {
+        playUISound("click");
+      } catch {
+        // Non-blocking sound
+      }
+
+      const elem =
+        document.getElementById(targetId) ||
+        (targetId === "certifications" ? document.getElementById("certificates") : null);
+
+      if (elem) {
+        const targetPosition = elem.getBoundingClientRect().top + window.scrollY - 80;
+        window.scrollTo({
+          top: targetPosition,
+          behavior: "smooth",
+        });
+        setActiveSection(targetId);
+      }
+
+      setMobileMenuOpen(false);
+    },
+    []
+  );
 
   return (
     <>
-      {/* Top Scroll Progress Bar */}
-      <motion.div
-        className="fixed top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#F59E0B] via-[#F97316] to-[#EF4444] origin-[0%] z-55"
-        style={{ scaleX: scrollYProgress }}
-      />
-
+      {/* ===================================================================== */}
+      {/* MAIN FIXED NAVBAR CONTAINER                                           */}
+      {/* ===================================================================== */}
       <header
-        className={`fixed top-0 left-0 right-0 transition-all duration-500 z-50 ${
+        style={{
+          transform: isVisible ? "translateY(0)" : "translateY(-100%)",
+          transition:
+            "transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), height 0.3s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1)",
+        }}
+        className={`fixed top-0 left-0 right-0 z-50 w-full ${
           isScrolled
-            ? "h-16 bg-[#030303]/80 backdrop-blur-md border-b border-[#F59E0B]/15 shadow-[0_4px_30px_rgba(245,158,11,0.03)]"
-            : "h-20 bg-transparent"
+            ? "h-16 bg-[#0A0A0E]/70 backdrop-blur-md border-b border-[var(--border)] shadow-lg shadow-black/30"
+            : "h-[72px] bg-transparent border-b border-transparent shadow-none"
         }`}
       >
-        <div className="max-w-7xl mx-auto h-full px-4 sm:px-6 flex items-center justify-between gap-4 relative">
-          {/* SV Logo with tactile scaling, glows, and sound triggers */}
+        <div className="max-w-[1200px] mx-auto h-full px-6 lg:px-12 flex items-center justify-between">
+
+          {/* ----------------------------------------------------------------- */}
+          {/* LEFT: LOGO "SV" (40x40, 1px border, Space Grotesk Bold)          */}
+          {/* ----------------------------------------------------------------- */}
           <a
             href="#home"
-            onClick={(e) => {
-              playUISound("click");
-              handleAnchorClick(e, "#home");
+            onClick={(e) => handleLinkClick(e, "home")}
+            onMouseEnter={() => {
+              try { playUISound("hover"); } catch {}
             }}
-            onMouseEnter={() => playUISound("hover")}
-            className="group flex items-center gap-1.5 font-display font-black text-lg sm:text-xl tracking-wider text-white shrink-0"
+            aria-label="Sai Vikas Home"
+            className="group relative flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)] hover:shadow-[0_0_20px_rgba(255,122,26,0.35)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline-2 focus-visible:outline-[var(--accent)] focus-visible:outline-offset-[3px] shrink-0"
           >
-            <span className="relative flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 border border-white/10 rounded-lg bg-white/5 overflow-hidden transition-all duration-300 group-hover:border-[#F97316]/50 group-hover:scale-105 group-active:scale-95 group-hover:shadow-[0_0_15px_rgba(249,115,22,0.3)]">
-              <span className="absolute inset-0 bg-gradient-to-br from-[#F59E0B]/20 to-[#EF4444]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <span className="font-display font-bold text-base tracking-tight text-[var(--text)] group-hover:text-white transition-colors duration-200">
               SV
             </span>
           </a>
 
-          {/* Persistent Responsive Navigation Links */}
-          <nav className="flex items-center gap-2.5 xs:gap-4 sm:gap-6 lg:gap-8 overflow-x-auto no-scrollbar scroll-smooth md:absolute md:left-1/2 md:-translate-x-1/2 md:top-1/2 md:-translate-y-1/2">
-            {navLinks.map((link) => {
-              const isActive = activeSection === link.href.substring(1);
+          {/* ----------------------------------------------------------------- */}
+          {/* CENTER: DESKTOP NAVIGATION LINKS (>= 900px)                      */}
+          {/* ----------------------------------------------------------------- */}
+          <nav
+            aria-label="Primary Navigation"
+            className="hidden min-[900px]:flex items-center gap-6 lg:gap-8 whitespace-nowrap"
+          >
+            {NAV_LINKS.map((link) => {
+              const isActive = activeSection === link.targetId;
+              const isHovered = hoveredLink === link.targetId;
+
               return (
                 <a
-                  key={link.label}
+                  key={link.targetId}
                   href={link.href}
-                  onClick={(e) => {
-                    playUISound("click");
-                    handleAnchorClick(e, link.href);
+                  onClick={(e) => handleLinkClick(e, link.targetId)}
+                  onMouseEnter={() => {
+                    setHoveredLink(link.targetId);
+                    try { playUISound("hover"); } catch {}
                   }}
-                  onMouseEnter={() => playUISound("hover")}
-                  className={`relative py-1.5 sm:py-2 font-sans font-medium text-[10.5px] xs:text-xs sm:text-sm tracking-wide transition-all duration-300 group shrink-0 active:scale-95 ${
-                    isActive
-                      ? "text-[#F59E0B] font-semibold"
-                      : "text-zinc-400 hover:text-white"
+                  onMouseLeave={() => setHoveredLink(null)}
+                  className={`relative py-1.5 px-1 font-mono text-xs font-medium uppercase tracking-[0.12em] transition-colors duration-200 select-none ${
+                    isActive ? "text-white" : "text-[var(--text-muted)] hover:text-white"
                   }`}
                 >
-                  {link.label}
-                  {/* Expanding Underline from Center */}
-                  <span
-                    className={`absolute bottom-0 left-1/2 -translate-x-1/2 h-[2px] bg-gradient-to-r from-[#F59E0B] via-[#F97316] to-[#EF4444] transition-all duration-300 ${
-                      isActive
-                        ? "w-full opacity-100"
-                        : "w-0 opacity-0 group-hover:w-full group-hover:opacity-100"
-                    }`}
-                  />
+                  <span>{link.label}</span>
+
+                  {/* Active Link Sliding Pill / Underline Indicator */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="active-nav-indicator"
+                      transition={{
+                        type: "spring" as const,
+                        stiffness: 380,
+                        damping: 30,
+                      }}
+                      className="absolute -bottom-1 left-0 right-0 h-[2px] bg-gradient-to-r from-[#FFB020] to-[#FF7A1A] rounded-full"
+                    />
+                  )}
+
+                  {/* Hover Accent Dot (fades in under link when not active) */}
+                  {!isActive && isHovered && (
+                    <motion.span
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.5 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[var(--accent)]"
+                    />
+                  )}
                 </a>
               );
             })}
           </nav>
 
-          {/* Audio & Hires CTA Controls Container */}
-          <div className="flex items-center gap-3 shrink-0">
-            {/* Zero-Latency UI Audio Toggle controls */}
-            <button
-              onClick={toggleSound}
-              onMouseEnter={() => playUISound("hover")}
-              className="relative flex items-center justify-center w-8.5 h-8.5 rounded-xl border border-white/10 bg-white/5 hover:border-[#F97316]/40 hover:text-white transition-all duration-300 hover:scale-105 active:scale-95 shrink-0"
-              title={soundEnabled ? "Mute interface feedback sounds" : "Unmute interface feedback sounds"}
-            >
-              {soundEnabled ? (
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#F97316]">
-                  <path d="M11 5L6 9H2v6h4l5 4V5z" />
-                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-500">
-                  <path d="M11 5L6 9H2v6h4l5 4V5z" />
-                  <line x1="22" y1="9" x2="16" y2="15" />
-                  <line x1="16" y1="9" x2="22" y2="15" />
-                </svg>
-              )}
-            </button>
-
-            {/* Hire Me Action button */}
+          {/* ----------------------------------------------------------------- */}
+          {/* RIGHT: "HIRE ME" PRIMARY GRADIENT BUTTON + MOBILE MENU TRIGGER   */}
+          {/* ----------------------------------------------------------------- */}
+          <div className="flex items-center gap-3">
+            {/* Primary HIRE ME Button (Desktop >= 900px) */}
             <a
               href="#contact"
-              onClick={(e) => {
-                playUISound("click");
-                handleAnchorClick(e, "#contact");
+              onClick={(e) => handleLinkClick(e, "contact")}
+              onMouseEnter={() => {
+                try { playUISound("hover"); } catch {}
               }}
-              onMouseEnter={() => playUISound("hover")}
-              className="relative hidden sm:inline-flex items-center justify-center px-4 py-2 rounded-lg text-[10px] sm:text-xs font-bold tracking-wider text-white bg-gradient-to-r from-[#F59E0B] via-[#F97316] to-[#EF4444] hover:shadow-[0_0_20px_rgba(245,158,11,0.5)] hover:scale-105 active:scale-95 transition-all duration-300 shrink-0"
+              className="hidden min-[900px]:inline-flex items-center justify-center h-10 px-5 rounded-full font-sans font-semibold text-xs tracking-wider uppercase text-[#07070A] bg-gradient-to-r from-[#FFB020] via-[#FF7A1A] to-[#FF3D54] shadow-[0_0_20px_-2px_rgba(255,122,26,0.35)] hover:shadow-[0_0_30px_rgba(255,122,26,0.55)] hover:scale-105 active:scale-95 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] select-none shrink-0"
             >
               HIRE ME
             </a>
+
+            {/* Mobile Hamburger Morph Button (< 900px) */}
+            <button
+              onClick={() => {
+                try { playUISound("click"); } catch {}
+                setMobileMenuOpen(!mobileMenuOpen);
+              }}
+              aria-label={mobileMenuOpen ? "Close Navigation Menu" : "Open Navigation Menu"}
+              aria-expanded={mobileMenuOpen}
+              className="min-[900px]:hidden flex items-center justify-center w-11 h-11 rounded-full bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--border-strong)] text-[var(--text)] transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-[var(--accent)] focus-visible:outline-offset-[3px] shrink-0"
+            >
+              <div className="relative w-5 h-4 flex flex-col justify-between">
+                {/* Top line */}
+                <span
+                  style={{
+                    transform: mobileMenuOpen
+                      ? "translateY(7px) rotate(45deg)"
+                      : "translateY(0) rotate(0deg)",
+                    transition: "transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)",
+                  }}
+                  className="w-full h-[2px] bg-[var(--text)] rounded-full origin-center"
+                />
+                {/* Middle line */}
+                <span
+                  style={{
+                    opacity: mobileMenuOpen ? 0 : 1,
+                    transform: mobileMenuOpen ? "scaleX(0)" : "scaleX(1)",
+                    transition: "opacity 0.2s, transform 0.2s",
+                  }}
+                  className="w-full h-[2px] bg-[var(--text)] rounded-full origin-center"
+                />
+                {/* Bottom line */}
+                <span
+                  style={{
+                    transform: mobileMenuOpen
+                      ? "translateY(-7px) rotate(-45deg)"
+                      : "translateY(0) rotate(0deg)",
+                    transition: "transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)",
+                  }}
+                  className="w-full h-[2px] bg-[var(--text)] rounded-full origin-center"
+                />
+              </div>
+            </button>
           </div>
+
         </div>
       </header>
+
+      {/* ===================================================================== */}
+      {/* MOBILE FULL-SCREEN BLURRED OVERLAY (< 900px)                         */}
+      {/* ===================================================================== */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed inset-0 z-40 min-[900px]:hidden bg-[#07070A]/95 backdrop-blur-2xl flex flex-col justify-between px-8 pt-28 pb-12"
+          >
+            {/* Top Eyebrow Label */}
+            <div className="inline-flex items-center gap-2 mb-4">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+              <span className="font-mono text-xs uppercase tracking-[0.12em] text-[var(--text-dim)]">
+                NAVIGATION
+              </span>
+            </div>
+
+            {/* Mobile Navigation Links (Space Grotesk 36px with Staggered Slide-Up) */}
+            <nav className="flex flex-col space-y-4 my-auto">
+              {NAV_LINKS.map((link, idx) => {
+                const isActive = activeSection === link.targetId;
+
+                return (
+                  <motion.div
+                    key={link.targetId}
+                    initial={{ opacity: 0, y: 28 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      delay: 0.06 * idx,
+                      duration: 0.5,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                  >
+                    <a
+                      href={link.href}
+                      onClick={(e) => handleLinkClick(e, link.targetId)}
+                      className={`group inline-flex items-center gap-4 font-display font-semibold text-3xl sm:text-4xl tracking-tight transition-colors duration-200 ${
+                        isActive ? "text-[var(--accent)]" : "text-[var(--text)] hover:text-white"
+                      }`}
+                    >
+                      <span className="font-mono text-xs text-[var(--text-dim)] group-hover:text-[var(--accent)] transition-colors">
+                        0{idx + 1}
+                      </span>
+                      <span>{link.label}</span>
+                    </a>
+                  </motion.div>
+                );
+              })}
+            </nav>
+
+            {/* Mobile Footer CTAs */}
+            <div className="space-y-4 pt-6 border-t border-[var(--border)]">
+              <a
+                href="#contact"
+                onClick={(e) => handleLinkClick(e, "contact")}
+                className="w-full inline-flex items-center justify-center h-12 rounded-full font-sans font-semibold text-sm tracking-wider uppercase text-[#07070A] bg-gradient-to-r from-[#FFB020] via-[#FF7A1A] to-[#FF3D54] shadow-[0_0_24px_rgba(255,122,26,0.4)] active:scale-[0.98] transition-all"
+              >
+                HIRE ME
+              </a>
+              <div className="flex items-center justify-between text-xs font-mono text-[var(--text-dim)]">
+                <span>© {new Date().getFullYear()} SAI VIKAS</span>
+                <span className="text-emerald-400">● AVAILABLE</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
