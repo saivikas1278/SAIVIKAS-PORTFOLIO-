@@ -197,7 +197,6 @@ export default function AboutSection() {
                     alt="Sai Vikas Portrait"
                     fill
                     sizes="(max-width: 1024px) 100vw, 450px"
-                    priority
                     className="object-cover object-top filter grayscale contrast-[1.05] brightness-[0.98] group-hover:grayscale-0 group-hover:contrast-[1.02] group-hover:brightness-[1.02] transition-all duration-700 ease-out"
                   />
                   {/* Subtle Dark Vignette Mask */}

@@ -220,7 +220,7 @@ export default function ContactSection() {
                     type="button"
                     onClick={handleCopyEmail}
                     title="Copy email to clipboard"
-                    className="relative px-2.5 py-1.5 rounded-lg bg-[var(--surface-2)] hover:bg-white/10 border border-[var(--border)] text-xs text-[var(--text-muted)] hover:text-white transition-all flex items-center gap-1.5 select-none"
+                    className="relative px-3 py-2 min-h-[44px] rounded-lg bg-[var(--surface-2)] hover:bg-white/10 border border-[var(--border)] text-xs text-[var(--text-muted)] hover:text-white transition-all flex items-center gap-1.5 select-none"
                   >
                     {copied ? (
                       <>
@@ -239,7 +239,8 @@ export default function ContactSection() {
 
                   <a
                     href={`mailto:${email}`}
-                    className="text-[var(--text-dim)] group-hover:text-[var(--accent)] transition-colors"
+                    aria-label="Send email"
+                    className="text-[var(--text-dim)] group-hover:text-[var(--accent)] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                   >
                     <ArrowUpRight
                       size={18}

@@ -1,38 +1,67 @@
+import dynamic from "next/dynamic";
 import Navbar from "@/components/navbar";
 import HeroSection from "@/components/sections/hero-section";
 import AboutSection from "@/components/sections/about-section";
-import ContactSection from "@/components/sections/contact-section";
-import SkillsSection from "@/components/sections/skills-section";
-import ProjectsSection from "@/components/sections/projects-section";
-import CertificationsSection from "@/components/sections/certifications-section";
-import Footer from "@/components/footer";
+
+// Code-split below-the-fold sections for instant first-load LCP & FID
+const ProjectsSection = dynamic(
+  () => import("@/components/sections/projects-section"),
+  {
+    loading: () => <div className="py-20 min-h-[400px]" />,
+  }
+);
+
+const SkillsSection = dynamic(
+  () => import("@/components/sections/skills-section"),
+  {
+    loading: () => <div className="py-20 min-h-[400px]" />,
+  }
+);
+
+const CertificationsSection = dynamic(
+  () => import("@/components/sections/certifications-section"),
+  {
+    loading: () => <div className="py-20 min-h-[400px]" />,
+  }
+);
+
+const ContactSection = dynamic(
+  () => import("@/components/sections/contact-section"),
+  {
+    loading: () => <div className="py-20 min-h-[400px]" />,
+  }
+);
+
+const Footer = dynamic(() => import("@/components/footer"), {
+  loading: () => <div className="py-16 min-h-[250px]" />,
+});
 
 export default function Home() {
   return (
-    <div className="relative min-h-screen">
+    <main className="relative min-h-screen">
       {/* Fixed Navbar with Scroll Spy & Morphing Mobile Menu */}
       <Navbar />
 
-      {/* Hero Section with 3D Tilt Flagship Card */}
+      {/* Hero Section with 3D Tilt Flagship Card & Word-by-Word Reveal */}
       <HeroSection />
 
-      {/* Bento About Section */}
+      {/* Bento About Section with Verified Academic Metrics */}
       <AboutSection />
 
       {/* Projects Section with Live Simulated Auction Mockup */}
       <ProjectsSection />
 
-      {/* Skills Section with 60fps Marquee & Bento Cards */}
+      {/* Skills Section with 60fps Keyframe Marquee & Bento Cards */}
       <SkillsSection />
 
-      {/* Certifications Section with Lightbox & Spotlight */}
+      {/* Certifications Section with Lightbox Modal & Spotlight */}
       <CertificationsSection />
 
       {/* Contact Section with Floating-Label Form & Direct Cards */}
       <ContactSection />
 
-      {/* Big CTA Band & 3-Column Footer */}
+      {/* Big CTA Band with Magnetic Button & 3-Column Footer */}
       <Footer />
-    </div>
+    </main>
   );
 }

@@ -56,8 +56,7 @@ export function playUISound(type: "click" | "hover") {
       osc.start();
       osc.stop(ctx.currentTime + 0.12);
     }
-  } catch (err) {
+  } catch {
     // Fail silently to avoid interrupting interface layout
-    console.debug("Web Audio synthesis is blocked or unsupported", err);
   }
 }

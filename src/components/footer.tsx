@@ -232,7 +232,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="GitHub Profile"
-                  className="w-10 h-10 rounded-xl bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)] hover:bg-[#FF7A1A]/10 text-zinc-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-1"
+                  className="w-11 h-11 rounded-xl bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)] hover:bg-[#FF7A1A]/10 text-zinc-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-1"
                 >
                   <FaGithub size={16} />
                 </a>
@@ -242,7 +242,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="LinkedIn Profile"
-                  className="w-10 h-10 rounded-xl bg-[var(--surface)] border border-[var(--border)] hover:border-[#0A66C2] hover:bg-[#0A66C2]/10 text-zinc-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-1"
+                  className="w-11 h-11 rounded-xl bg-[var(--surface)] border border-[var(--border)] hover:border-[#0A66C2] hover:bg-[#0A66C2]/10 text-zinc-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-1"
                 >
                   <FaLinkedin size={16} />
                 </a>
@@ -252,7 +252,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="X Profile"
-                  className="w-10 h-10 rounded-xl bg-[var(--surface)] border border-[var(--border)] hover:border-white/30 hover:bg-white/10 text-zinc-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-1"
+                  className="w-11 h-11 rounded-xl bg-[var(--surface)] border border-[var(--border)] hover:border-white/30 hover:bg-white/10 text-zinc-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-1"
                 >
                   <FaXTwitter size={14} />
                 </a>
@@ -260,7 +260,7 @@ export default function Footer() {
                 <a
                   href="mailto:cheepusaivikas549@gmail.com"
                   aria-label="Email Direct"
-                  className="w-10 h-10 rounded-xl bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)] hover:bg-[#FF7A1A]/10 text-zinc-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-1"
+                  className="w-11 h-11 rounded-xl bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)] hover:bg-[#FF7A1A]/10 text-zinc-400 hover:text-white flex items-center justify-center transition-all duration-200 hover:-translate-y-1"
                 >
                   <Mail size={16} />
                 </a>
@@ -278,7 +278,7 @@ export default function Footer() {
 
             <button
               onClick={scrollToTop}
-              className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-muted)] hover:text-white transition-all duration-200 hover:-translate-y-0.5 cursor-pointer select-none"
+              className="group inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-lg bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--accent)] text-[var(--text-muted)] hover:text-white transition-all duration-200 hover:-translate-y-0.5 cursor-pointer select-none"
             >
               <span>Back to top</span>
               <ArrowUp

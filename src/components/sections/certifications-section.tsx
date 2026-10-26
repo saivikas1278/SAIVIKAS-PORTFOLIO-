@@ -498,7 +498,6 @@ export default function CertificationsSection() {
                     fill
                     sizes="(max-width: 1200px) 100vw, 1000px"
                     className="object-contain"
-                    priority
                   />
                 ) : (
                   /* Enlarged High-Fidelity Certificate Sheet */

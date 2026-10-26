@@ -103,16 +103,8 @@ export async function POST(req: NextRequest) {
           { status: 502 }
         );
       }
-    } else {
-      // Development fallback when RESEND_API_KEY is not yet in .env
-      console.log("[DEV MODE] Contact form submission received:", {
-        name,
-        email,
-        subject,
-        message,
-        recipient,
-      });
     }
+    // Development fallback when RESEND_API_KEY is not yet configured
 
     return NextResponse.json(
       {
