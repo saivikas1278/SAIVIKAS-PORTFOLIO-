@@ -4,21 +4,25 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 
 export default function PageIntro() {
-  const [visible, setVisible] = useState(true);
+  const [mounted, setMounted] = useState(false);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     // Respect prefers-reduced-motion
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setVisible(false);
       return;
     }
+    setVisible(true);
 
     const timer = setTimeout(() => {
       setVisible(false);
-    }, 1000);
+    }, 1100);
 
     return () => clearTimeout(timer);
   }, []);
+
+  if (!mounted || !visible) return null;
 
   return (
     <AnimatePresence>

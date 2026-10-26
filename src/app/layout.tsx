@@ -159,6 +159,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} scroll-smooth`}
     >
       <head>
@@ -167,7 +168,10 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}
         />
       </head>
-      <body className="bg-[var(--bg)] text-[var(--text)] font-sans antialiased min-h-screen selection:bg-[#FF7A1A]/30 selection:text-[#F5F5F7] overflow-x-hidden relative">
+      <body
+        suppressHydrationWarning
+        className="bg-[var(--bg)] text-[var(--text)] font-sans antialiased min-h-screen selection:bg-[#FF7A1A]/30 selection:text-[#F5F5F7] overflow-x-hidden relative"
+      >
         {/* Subtle 1-Second Page-Load Intro */}
         <PageIntro />
 
@@ -178,7 +182,7 @@ export default function RootLayout({
         <AmbientBackground />
 
         {/* Page Content */}
-        <div className="relative z-10">
+        <div suppressHydrationWarning className="relative z-10">
           {children}
         </div>
       </body>

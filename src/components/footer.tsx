@@ -267,7 +267,7 @@ export default function Footer() {
               </div>
 
               <div className="pt-2 font-mono text-[11px] text-[var(--text-dim)]">
-                Available for internships & full-time developer roles.
+                {"Available for internships & full-time developer roles."}
               </div>
             </div>
           </div>

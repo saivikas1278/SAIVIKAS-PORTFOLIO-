@@ -38,7 +38,7 @@ const Footer = dynamic(() => import("@/components/footer"), {
 
 export default function Home() {
   return (
-    <main className="relative min-h-screen">
+    <main suppressHydrationWarning className="relative min-h-screen">
       {/* Fixed Navbar with Scroll Spy & Morphing Mobile Menu */}
       <Navbar />
 

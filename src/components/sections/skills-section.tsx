@@ -170,33 +170,6 @@ export default function SkillsSection() {
       aria-label="Technical Skills & Stack"
       className="relative py-20 lg:py-[120px] w-full bg-[var(--bg)] overflow-hidden"
     >
-      {/* Pure CSS keyframe animations for 60fps marquee */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes marquee-scroll-left {
-          0% { transform: translate3d(0, 0, 0); }
-          100% { transform: translate3d(-50%, 0, 0); }
-        }
-        @keyframes marquee-scroll-right {
-          0% { transform: translate3d(-50%, 0, 0); }
-          100% { transform: translate3d(0, 0, 0); }
-        }
-        .anim-marquee-left {
-          display: flex;
-          width: max-content;
-          will-change: transform;
-          animation: marquee-scroll-left 40s linear infinite;
-        }
-        .anim-marquee-right {
-          display: flex;
-          width: max-content;
-          will-change: transform;
-          animation: marquee-scroll-right 40s linear infinite;
-        }
-        .anim-marquee-left:hover, .anim-marquee-right:hover {
-          animation-play-state: paused;
-        }
-      ` }} />
-
       <div className="max-w-[1200px] mx-auto px-6 lg:px-12">
         {/* =================================================================== */}
         {/* 1. SECTION HEADER                                                   */}

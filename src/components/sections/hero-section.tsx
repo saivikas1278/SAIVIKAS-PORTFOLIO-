@@ -175,24 +175,6 @@ export default function HeroSection() {
       {/* ========================================================================= */}
       {/* 1. PARALLAX AMBIENT GLOWS & HERO MESH BACKDROP                            */}
       {/* ========================================================================= */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes conic-spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        .anim-conic-spin {
-          animation: conic-spin 8s linear infinite;
-        }
-        @keyframes mouse-scroll-dot {
-          0% { transform: translateY(0px); opacity: 1; }
-          75% { transform: translateY(10px); opacity: 0; }
-          100% { transform: translateY(0px); opacity: 0; }
-        }
-        .anim-scroll-dot {
-          animation: mouse-scroll-dot 1.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
-        }
-      ` }} />
-
       {/* Parallax Shifted Ambient Light (Orange Top-Right) */}
       <div
         aria-hidden="true"

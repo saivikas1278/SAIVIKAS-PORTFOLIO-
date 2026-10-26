@@ -82,16 +82,6 @@ export default function AboutSection() {
       aria-label="About Sai Vikas"
       className="relative py-20 lg:py-[120px] w-full bg-[var(--bg)]"
     >
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes float-badge-subtle {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-8px); }
-        }
-        .anim-float-photo {
-          animation: float-badge-subtle 6s ease-in-out infinite;
-        }
-      ` }} />
-
       <div className="max-w-[1200px] mx-auto px-6 lg:px-12">
         {/* =================================================================== */}
         {/* 1. SECTION HEADER (REVEAL)                                          */}

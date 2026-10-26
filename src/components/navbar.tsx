@@ -338,7 +338,7 @@ export default function Navbar() {
                 HIRE ME
               </a>
               <div className="flex items-center justify-between text-xs font-mono text-[var(--text-dim)]">
-                <span>© {new Date().getFullYear()} SAI VIKAS</span>
+                <span>© 2026 SAI VIKAS</span>
                 <span className="text-emerald-400">● AVAILABLE</span>
               </div>
             </div>

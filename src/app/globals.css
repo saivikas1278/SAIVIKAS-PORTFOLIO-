@@ -172,6 +172,59 @@ p {
 }
 
 /* ========================================================================= */
+/* COMPONENT ANIMATIONS & KEYFRAMES                                          */
+/* ========================================================================= */
+@keyframes conic-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.anim-conic-spin {
+  animation: conic-spin 8s linear infinite;
+}
+
+@keyframes mouse-scroll-dot {
+  0% { transform: translateY(0px); opacity: 1; }
+  75% { transform: translateY(10px); opacity: 0; }
+  100% { transform: translateY(0px); opacity: 0; }
+}
+.anim-scroll-dot {
+  animation: mouse-scroll-dot 1.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+@keyframes float-badge-subtle {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+.anim-float-photo {
+  animation: float-badge-subtle 6s ease-in-out infinite;
+}
+
+@keyframes marquee-scroll-left {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+@keyframes marquee-scroll-right {
+  0% { transform: translate3d(-50%, 0, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+.anim-marquee-left {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: marquee-scroll-left 40s linear infinite;
+}
+.anim-marquee-right {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: marquee-scroll-right 40s linear infinite;
+}
+.anim-marquee-left:hover,
+.anim-marquee-right:hover {
+  animation-play-state: paused;
+}
+
+/* ========================================================================= */
 /* PREFERS-REDUCED-MOTION                                                    */
 /* ========================================================================= */
 @media (prefers-reduced-motion: reduce) {
